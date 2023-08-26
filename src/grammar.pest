@@ -1,0 +1,118 @@
+
+top_level = {
+
+}
+
+_type = {
+  (simple_type | constant | name) ~ construct_session_type*
+}
+
+construct_session_type = {
+  "->" ~ _type
+}
+
+struct_type = {
+  anotation ~
+  "struct" ~ name ~ "{"
+    (struct_item ~ ("," ~ struct_item) ~ ","?)?
+   ~ "}"
+}
+
+struct_item = {
+  name ~ ":" ~ _type ~ ("=" ~ int_lit)?;
+}
+
+enum_type = {
+  "enum" ~ name ~ "{" ~
+  (enum_item ~ ("," ~ enum_item) ~ ","?)?
+   ~ "}"
+}
+
+enum_item = {
+  name ~ "(" ~ _type ~ ")" ~ ("=" ~ int_lit)?;
+}
+
+name = @{ (!(simple_type | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | "=" | constant) ~ ANY)+ }
+
+simple_type =
+  { "bool"
+  | "int"
+  | "float"
+  | "double"
+  }
+
+anotation = {
+  "#" ~ "[" ~ "todo"? ~ "]"
+}
+
+constant =
+  { string_lit
+  | float_lit
+  | int_lit
+  | uint_lit
+  | bool_lit
+  // | symbol
+}
+
+int_lit = ${ signed_number ~ !("u" | "f") ~ "i"? }
+uint_lit = ${ number ~ "u" }
+float_lit = ${ float_number ~ "f"? }
+
+float_number = $
+    { (("+" | "-")? ~ number_hex ~ "." ~ ASCII_HEX_DIGIT+)
+    | (("+" | "-")? ~ number_oct ~ "." ~ ASCII_OCT_DIGIT+)
+    | (("+" | "-")? ~ number_bin ~ "." ~ ASCII_BIN_DIGIT+)
+    | (("+" | "-")? ~ number_dec ~ "." ~ ASCII_DIGIT+)
+}
+
+signed_number = ${ ("+" | "-")? ~ number }
+
+number = $
+    { number_hex
+    | number_oct
+    | number_bin
+    | number_dec
+    }
+
+number_dec = _ { ASCII_DIGIT+ }
+number_oct = _ { "0o" ~ ASCII_OCT_DIGIT+ }
+number_hex = _ { "0x" ~ ASCII_HEX_DIGIT+ }
+number_bin = _ { "0b" ~ ASCII_BIN_DIGIT+ }
+
+string_lit = @ { "\"" ~ (escape | (!("\\" | "\"") ~ ANY)+)* ~ "\""}
+escape = _{ "\\\\"
+     | "\\\""
+     | "\\'"
+     | "\\n"
+     | "\\r"
+     | "\\t"
+     }
+
+bool_lit = @{ "true" | "false" }
+
+
+docu_comment = _ {
+  "///" ~ (!NEWLINE ~ ANY)* ~ NEWLINE?
+}
+
+COMMENT = _
+    { line_comment
+    // | block_comment
+    }
+
+line_comment = _ {
+  "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE?
+}
+
+/*
+block_comment = _ {
+	"{" ~ (block_comment | (!"}" ~ ANY))* ~ "}"
+}
+*/
+
+WHITESPACE = _
+  { " "
+  | "\t"
+  | WHITE_SPACE
+  | NEWLINE
+  }
