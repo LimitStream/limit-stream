@@ -1,20 +1,27 @@
 
 top_level = {
-  session_def,
-  struct_def,
-  enum_def,
+  session_def |
+  struct_def |
+  enum_def
 }
 
 session_def = {
-  session ~ name ~ "=" ~ session_type
+  "session" ~ name ~ "=" ~ session_type
 }
 
-session_type = {
-  (TODO ~ _type) ~ construct_session_type*
-}
+session_type =
+  { "end"
+  | (session_kind ~ _type) ~ construct_session_type*
+  }
+
+session_kind =
+  { "recv"
+  | "send"
+  | "offer"
+  }
 
 _type = {
-  session_def, simple_type | constant | name
+  (session_def | simple_type | constant | name) ~ _type?
 }
 
 construct_session_type = {
@@ -23,13 +30,13 @@ construct_session_type = {
 
 struct_def = {
   anotation ~
-  "struct" ~ name ~ "{"
+  "struct" ~ name ~ "{" ~
     (struct_item ~ ("," ~ struct_item) ~ ","?)?
    ~ "}"
 }
 
 struct_item = {
-  name ~ ":" ~ _type ~ ("=" ~ int_lit)?;
+  name ~ ":" ~ _type ~ ("=" ~ int_lit)?
 }
 
 enum_def = {
@@ -39,7 +46,7 @@ enum_def = {
 }
 
 enum_item = {
-  name ~ "(" ~ _type ~ ")" ~ ("=" ~ int_lit)?;
+  name ~ "(" ~ _type ~ ")" ~ ("=" ~ int_lit)?
 }
 
 name = @{ (!(simple_type | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | "=" | constant) ~ ANY)+ }
@@ -113,12 +120,6 @@ COMMENT = _
 line_comment = _ {
   "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE?
 }
-
-/*
-block_comment = _ {
-	"{" ~ (block_comment | (!"}" ~ ANY))* ~ "}"
-}
-*/
 
 WHITESPACE = _
   { " "
