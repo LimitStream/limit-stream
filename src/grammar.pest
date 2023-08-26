@@ -1,17 +1,27 @@
 
 top_level = {
+  session_def,
+  struct_def,
+  enum_def,
+}
 
+session_def = {
+  session ~ name ~ "=" ~ session_type
+}
+
+session_type = {
+  (TODO ~ _type) ~ construct_session_type*
 }
 
 _type = {
-  (simple_type | constant | name) ~ construct_session_type*
+  session_def, simple_type | constant | name
 }
 
 construct_session_type = {
-  "->" ~ _type
+  "->" ~ session_type
 }
 
-struct_type = {
+struct_def = {
   anotation ~
   "struct" ~ name ~ "{"
     (struct_item ~ ("," ~ struct_item) ~ ","?)?
@@ -22,7 +32,7 @@ struct_item = {
   name ~ ":" ~ _type ~ ("=" ~ int_lit)?;
 }
 
-enum_type = {
+enum_def = {
   "enum" ~ name ~ "{" ~
   (enum_item ~ ("," ~ enum_item) ~ ","?)?
    ~ "}"
