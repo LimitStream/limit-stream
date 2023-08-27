@@ -1,24 +1,30 @@
 use std::collections::HashMap;
 
 
+#[derive(Debug, Clone)]
+pub enum Def<'a> {
+  SessionDef(SessionDef<'a>),
+  StructDef(StructDef<'a>),
+  EnumDef(EnumDef<'a>),
+}
 
 #[derive(Debug, Clone)]
 pub struct SessionDef<'a> {
-  name: &'a str,
-  session: SessionType<'a>
+  pub name: &'a str,
+  pub session: SessionType<'a>
 }
 
 #[derive(Debug, Clone)]
 pub struct StructDef<'a> {
-  name: &'a str,
-  annotation: Annotation,
-  records: HashMap<&'a str, (TypeOrName<'a>, usize)>,
+  pub name: &'a str,
+  pub annotation: Annotation,
+  pub records: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
 }
 
 #[derive(Debug, Clone)]
 pub struct EnumDef<'a> {
-  name: &'a str,
-  items: HashMap<&'a str, (TypeOrName<'a>, usize)>,
+  pub name: &'a str,
+  pub items: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
 }
 
 #[derive(Debug, Clone)]
@@ -37,10 +43,14 @@ pub enum Type<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub enum SessionType<'a> {
+pub struct SessionType<'a>(pub Vec<Session<'a>>);
+
+#[derive(Debug, Clone)]
+pub enum Session<'a> {
   Recv(TypeOrName<'a>),
   Send(TypeOrName<'a>),
   Offer(TypeUnion<'a>),
+  Endpoint,
 }
 
 #[derive(Debug, Clone)]
@@ -72,6 +82,6 @@ pub enum Constant {
 }
 
 #[derive(Debug, Clone)]
-struct Annotation {
+pub struct Annotation {
 
 }

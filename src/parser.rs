@@ -1,14 +1,79 @@
+use std::collections::HashMap;
+
 use nom::character::complete::{anychar, one_of, char, alpha1, hex_digit1, oct_digit1, digit1};
 use nom::{error::ParseError, IResult, bytes::complete::take_while};
 use nom::bytes::complete::{tag, escaped, escaped_transform};
 use nom::branch::{alt};
-use nom::combinator::{map, map_res, value, cut, recognize, not};
-use nom::sequence::{preceded, separated_pair, terminated, pair};
+use nom::combinator::{map, map_res, value, cut, recognize, not, opt};
+use nom::sequence::{preceded, separated_pair, terminated, pair, tuple};
 use nom::number::complete::{float, double};
-use nom::multi::many1;
+use nom::multi::{many1, many0, separated_list1, separated_list0};
 
-use crate::ast::{Constant, SimpleType};
+use crate::ast::{Constant, SimpleType, StructDef, SessionType, TypeUnion, Type, TypeOrName, Session, SessionDef, Def, Annotation, EnumDef};
 
+
+fn defs(i: &str) -> IResult<&str, Def> {
+  alt((
+    map(session_def, Def::SessionDef),
+    map(struct_def, Def::StructDef),
+    map(enum_def, Def::EnumDef),
+  ))(i)
+}
+
+fn session_def(i: &str) -> IResult<&str, SessionDef> {
+  map(tuple((tag("session"), name, tag("="), session_type)),
+  |(_, name, _, session)| SessionDef{name, session})(i)
+}
+
+fn struct_def(i: &str) -> IResult<&str, StructDef> {
+  map(tuple((tag("struct"), name, tag("{"), separated_list0(preceded(white_space, char(',')), struct_item), tag("}"))),
+  |(_, name, _, items, _)| StructDef{name, annotation: Annotation{}, records: items})(i)
+}
+
+fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
+  map(tuple((name, tag(":"), type_or_name,
+    opt(preceded(tag("="), uint_lit)))), |(name, _, ty, sync)| (name, (ty, sync)))(i)
+}
+
+fn enum_def(i: &str) -> IResult<&str, EnumDef> {
+  map(tuple((tag("enum"), name, tag("{"), separated_list0(preceded(white_space, char(',')), enum_item), tag("}"))),
+  |(_, name, _, items, _)| EnumDef
+  {name, items})(i)
+}
+
+fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
+  map(tuple((name, tag("("), type_or_name, tag(")"),
+    opt(preceded(tag("="), uint_lit)))), |(name, _, ty, _, sync)| (name, (ty, sync)))(i)
+}
+
+fn type_or_name(i: &str) -> IResult<&str, TypeOrName> {
+  alt((
+    map(_type, |t|TypeOrName::Type(Box::new(t))),
+    map(name, TypeOrName::Name)))(i)
+}
+
+fn _type(i: &str) -> IResult<&str, Type> {
+  alt((
+    map(session_type, Type::Session),
+  ))(i)
+}
+
+fn session_type(i: &str) -> IResult<&str, SessionType> {
+  map(separated_list1(preceded(white_space, tag("->")), session), SessionType)(i)
+}
+
+fn session(i: &str) -> IResult<&str, Session> {
+  alt((
+    value(Session::Endpoint, tag("end")),
+    map(preceded(tag("offer"), type_union), Session::Offer),
+    map(preceded(tag("recv"), type_or_name), Session::Recv),
+    map(preceded(tag("send"), type_or_name), Session::Send),
+  ))(i)
+}
+
+fn type_union(i: &str) -> IResult<&str, TypeUnion> {
+  map(separated_pair(type_or_name, tag("|"), type_or_name), |(a, b)| TypeUnion(a, b))(i)
+}
 
 fn name(i: &str) -> IResult<&str, &str> {
   recognize(many1(pair(not(alt((

@@ -16,21 +16,22 @@ session_def = {
 session_type =
   { "end"
   | ("offer" ~ union_type)
-  | (session_kind ~ _type) ~ construct_session_type*
+  | (session_kind ~ type_or_name) ~ construct_session_type*
   }
 
 session_kind =
   { "recv"
   | "send"
-  | "offer"
   }
 
 union_type = {
-  _type ~ "|" ~ _type
+  type_or_name ~ "|" ~ type_or_name
 }
 
+type_or_name = { _type | name }
+
 _type = {
-  (session_type | simple_type | constant | name) ~ _type?
+  session_type | simple_type | constant
 }
 
 construct_session_type = {
@@ -45,7 +46,7 @@ struct_def = {
 }
 
 struct_item = {
-  name ~ ":" ~ _type ~ ("=" ~ int_lit)?
+  name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
 }
 
 enum_def = {
@@ -55,7 +56,7 @@ enum_def = {
 }
 
 enum_item = {
-  name ~ "(" ~ _type ~ ")" ~ ("=" ~ int_lit)?
+  name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
 }
 
 name = @{ (!(WHITE_SPACE
