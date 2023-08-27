@@ -1,5 +1,9 @@
 
 top_level = {
+  defs*
+}
+
+defs = {
   session_def |
   struct_def |
   enum_def
@@ -11,6 +15,7 @@ session_def = {
 
 session_type =
   { "end"
+  | ("offer" ~ union_type)
   | (session_kind ~ _type) ~ construct_session_type*
   }
 
@@ -20,8 +25,12 @@ session_kind =
   | "offer"
   }
 
+union_type = {
+  _type ~ "|" ~ _type
+}
+
 _type = {
-  (session_def | simple_type | constant | name) ~ _type?
+  (session_type | simple_type | constant | name) ~ _type?
 }
 
 construct_session_type = {
@@ -49,7 +58,8 @@ enum_item = {
   name ~ "(" ~ _type ~ ")" ~ ("=" ~ int_lit)?
 }
 
-name = @{ (!(simple_type | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | "=" | constant) ~ ANY)+ }
+name = @{ (!(WHITE_SPACE
+  | NEWLINE | simple_type | "end" |  "recv" | "send" | "offer" | "session" | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | "=" | "|" | constant) ~ ANY)+ }
 
 simple_type =
   { "bool"
