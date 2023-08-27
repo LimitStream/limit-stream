@@ -1,0 +1,35 @@
+1 uint
++1 int
+-1 int
+1.1 double
+"sb\t\r\n" string
+
+string
+int
+uint
+float
+double
+bool
+
+array<string>
+dict<string, (float, float, float)>>
+
+struct User {
+  name: string = 0,
+  age: uint = 1,
+  description: string = 2,
+}
+
+enum SB {
+  is_sb(User) = 1,
+  is_not_sb(User) = 0,
+}
+
+
+struct User {
+  name: string = 0,
+  age: uint = 1,
+  description: string = 2,
+}
+
+session GetUserSB = recv "End" -> recv User -> recv float -> send SB -> send int -> end

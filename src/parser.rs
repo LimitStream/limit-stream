@@ -21,29 +21,53 @@ pub fn def(i: &str) -> IResult<&str, Def> {
 }
 
 pub fn session_def(i: &str) -> IResult<&str, SessionDef> {
-  map(tuple((tag("session"), name, tag("="), session_type)),
+  map(tuple((
+    preceded(ws, tag("session")),
+    preceded(ws, name),
+    preceded(ws, tag("=")),
+    preceded(ws, session_type))),
   |(_, name, _, session)| SessionDef{name, session})(i)
 }
 
 pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
-  map(tuple((tag("struct"), name, tag("{"), separated_list0(preceded(white_space, char(',')), struct_item), tag("}"))),
+  map(tuple((
+    preceded(ws, tag("struct")),
+    preceded(ws, name),
+    preceded(ws, tag("{")),
+    preceded(ws, separated_list0(preceded(ws, char(',')), preceded(ws, struct_item))),
+    preceded(ws, tag("}")))),
   |(_, name, _, items, _)| StructDef{name, annotation: Annotation{}, records: items})(i)
 }
 
 pub fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
-  map(tuple((name, tag(":"), type_or_name,
-    opt(preceded(tag("="), uint_lit)))), |(name, _, ty, sync)| (name, (ty, sync)))(i)
+  map(tuple((
+    preceded(ws, name),
+    preceded(ws, tag(":")),
+    preceded(ws, type_or_name),
+    preceded(ws, opt(preceded(tag("="), uint_lit))
+  ))), |(name, _, ty, sync)| (name, (ty, sync)))(i)
 }
 
 pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
-  map(tuple((tag("enum"), name, tag("{"), separated_list0(preceded(white_space, char(',')), enum_item), tag("}"))),
+  map(tuple((
+    preceded(ws, tag("enum")),
+    preceded(ws, name),
+    preceded(ws, tag("{")),
+    preceded(ws, separated_list0(preceded(ws, char(',')), preceded(ws, enum_item))),
+    preceded(ws, tag("}"))
+  )),
   |(_, name, _, items, _)| EnumDef
   {name, items})(i)
 }
 
 pub fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
-  map(tuple((name, tag("("), type_or_name, tag(")"),
-    opt(preceded(tag("="), uint_lit)))), |(name, _, ty, _, sync)| (name, (ty, sync)))(i)
+  map(tuple((
+    preceded(ws, name),
+    preceded(ws, tag("(")),
+    preceded(ws, type_or_name),
+    preceded(ws, tag(")")),
+    preceded(ws, opt(preceded(tag("="), uint_lit)))
+  )), |(name, _, ty, _, sync)| (name, (ty, sync)))(i)
 }
 
 pub fn type_or_name(i: &str) -> IResult<&str, TypeOrName> {
@@ -61,25 +85,29 @@ pub fn _type(i: &str) -> IResult<&str, Type> {
 }
 
 pub fn session_type(i: &str) -> IResult<&str, SessionType> {
-  map(separated_list1(preceded(white_space, tag("->")), session), SessionType)(i)
+  map(separated_list1(preceded(ws, tag("->")), preceded(ws, session)), SessionType)(i)
 }
 
 pub fn session(i: &str) -> IResult<&str, Session> {
   alt((
     value(Session::Endpoint, tag("end")),
-    map(preceded(tag("offer"), type_union), Session::Offer),
-    map(preceded(tag("recv"), type_or_name), Session::Recv),
-    map(preceded(tag("send"), type_or_name), Session::Send),
+    map(preceded(ws, preceded(tag("offer"), preceded(ws, type_union))), Session::Offer),
+    map(preceded(ws, preceded(tag("recv"), preceded(ws, type_or_name))), Session::Recv),
+    map(preceded(ws, preceded(tag("send"), preceded(ws, type_or_name))), Session::Send),
   ))(i)
 }
 
 pub fn type_union(i: &str) -> IResult<&str, TypeUnion> {
-  map(separated_pair(type_or_name, tag("|"), type_or_name), |(a, b)| TypeUnion(a, b))(i)
+  map(separated_pair(
+    preceded(ws, type_or_name),
+    preceded(ws, tag("|")),
+    preceded(ws, type_or_name)
+  ), |(a, b)| TypeUnion(a, b))(i)
 }
 
 pub fn name(i: &str) -> IResult<&str, &str> {
   recognize(many1(pair(not(alt((
-    value((), white_space),
+    value((), ws),
     value((), simple_type),
     value((), alt((
       tag("end"),
@@ -196,7 +224,7 @@ pub fn line_comment(i: &str) -> IResult<&str, &str> {
   todo!()
 }
 
-pub fn white_space(i: &str) -> IResult<&str, &str> {
+pub fn ws(i: &str) -> IResult<&str, &str> {
   let chars = " \t\r\n";
   take_while(move |c| chars.contains(c))(i)
 }
