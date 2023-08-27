@@ -3,6 +3,6 @@ use std::fs;
 fn main() {
   print!(">>> ");
   let test = fs::read_to_string("./test.txt").unwrap();
-  let r = _type(&test);
+  let r = struct_item(&test);
   println!("> {:?}", r);
 }

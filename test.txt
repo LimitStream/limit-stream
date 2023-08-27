@@ -1,7 +1,1 @@
-struct A{
-    a: string = 1,
-    b: int = 2,
-    c: uint = -3,
-}
-
-session fuck = recv 1 -> recv string -> send -0.2 -> end
+a: string = 1
