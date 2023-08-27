@@ -1,15 +1,8 @@
-use std::io::{stdin, stdout, Write};
-
 use limit_stream::parser::*;
-
+use std::fs;
 fn main() {
-  loop {
-  let mut source = String::new();
   print!(">>> ");
-  stdout().flush().unwrap();
-  stdin().read_line(&mut source).unwrap();
-  // let mut source = "<type your example>".to_string();
-  let r = _type(&source);
+  let test = fs::read_to_string("./test.txt").unwrap();
+  let r = _type(&test);
   println!("> {:?}", r);
-  }
 }
