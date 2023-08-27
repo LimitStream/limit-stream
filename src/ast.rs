@@ -40,6 +40,7 @@ pub enum Type<'a> {
   Enum(EnumDef<'a>),
   ContainerType(ContainerType<'a>),
   SimpleType(SimpleType),
+  Constant(Constant),
 }
 
 #[derive(Debug, Clone)]
