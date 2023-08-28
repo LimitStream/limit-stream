@@ -66,7 +66,7 @@ pub fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
     preceded(ws, tag("(")),
     preceded(ws, type_or_name),
     preceded(ws, tag(")")),
-    preceded(ws, opt(preceded(tag("="), uint_lit)))
+    opt(preceded(preceded(ws, tag("=")), preceded(ws, uint_lit)))
   )), |(name, _, ty, _, sync)| (name, (ty, sync)))(i)
 }
 
