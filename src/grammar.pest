@@ -60,7 +60,7 @@ enum_item = {
 }
 
 name = @{ (!(WHITE_SPACE
-  | NEWLINE | simple_type | "end" |  "recv" | "send" | "offer" | "session" | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | "=" | "|" | constant) ~ ANY)+ }
+  | NEWLINE | simple_type | "end" |  "recv" | "send" | "offer" | "session" | "struct" | "enum" | "->" | "#" | "[" | "]" |  "{" | "}" | "," | ":" | "=" | "|" | constant) ~ ANY)+ }
 
 simple_type =
   { "bool"

@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use nom::character::complete::{anychar, one_of, char, alpha1, hex_digit1, oct_digit1, digit1};
 use nom::{error::ParseError, IResult, bytes::complete::take_while};
-use nom::bytes::complete::{tag, escaped, escaped_transform};
+use nom::bytes::complete::{tag, escaped, escaped_transform, is_not, is_a};
 use nom::branch::{alt};
-use nom::combinator::{map, map_res, value, cut, recognize, not, opt};
+use nom::combinator::{map, map_res, value, cut, recognize, not, opt, fail};
 use nom::sequence::{preceded, separated_pair, terminated, pair, tuple};
 use nom::number::complete::{float, double};
 use nom::multi::{many1, many0, separated_list1, separated_list0};
@@ -107,26 +107,25 @@ pub fn type_union(i: &str) -> IResult<&str, TypeUnion> {
 
 pub fn name(i: &str) -> IResult<&str, &str> {
   recognize(many1(pair(not(alt((
-    value((), ws),
     value((), simple_type),
-    value((), alt((
-      tag("end"),
-      tag("recv"),
-      tag("send"),
-      tag("offer"),
-      tag("session"),
-      tag("struct"),
-      tag("enum"),
-      tag("->"),
-      tag("#"),
-      tag("["),
-      tag("]"),
-      tag("{"),
-      tag("}"),
-      tag(","),
-      tag("="),
-      tag("|"),
-    ))),
+    value((), is_a(" \t\r\n")), // white space
+    value((), tag("end")),
+    value((), tag("recv")),
+    value((), tag("send")),
+    value((), tag("offer")),
+    value((), tag("session")),
+    value((), tag("struct")),
+    value((), tag("enum")),
+    value((), tag("->")),
+    value((), tag("#")),
+    value((), tag("[")),
+    value((), tag("]")),
+    value((), tag("{")),
+    value((), tag("}")),
+    value((), tag(",")),
+    value((), tag(":")),
+    value((), tag("=")),
+    value((), tag("|")),
     value((), constant),
   ))), anychar)))(i)
 }
@@ -226,5 +225,11 @@ pub fn line_comment(i: &str) -> IResult<&str, &str> {
 
 pub fn ws(i: &str) -> IResult<&str, &str> {
   let chars = " \t\r\n";
+  take_while(move |c| chars.contains(c))(i)
+}
+
+pub fn raw_ws(i: &str) -> IResult<&str, &str> {
+  let chars = " \t\r\n";
+
   take_while(move |c| chars.contains(c))(i)
 }
