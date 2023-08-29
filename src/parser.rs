@@ -39,15 +39,6 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
   |(_, name, _, items, _)| StructDef{name, annotation: Annotation{}, records: items})(i)
 }
 
-pub fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
-  map(tuple((
-    preceded(ws, name),
-    preceded(ws, tag(":")),
-    preceded(ws, type_or_name),
-    opt(preceded(preceded(ws, tag("=")), preceded(ws, uint_lit))
-  ))), |(name, _, ty, sync)| (name, (ty, sync)))(i)
-}
-
 pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
   map(tuple((
     preceded(ws, tag("enum")),
@@ -58,6 +49,15 @@ pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
   )),
   |(_, name, _, items, _)| EnumDef
   {name, items})(i)
+}
+
+pub fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
+  map(tuple((
+    preceded(ws, name),
+    preceded(ws, tag(":")),
+    preceded(ws, type_or_name),
+    opt(preceded(preceded(ws, tag("=")), preceded(ws, uint_lit))
+  ))), |(name, _, ty, sync)| (name, (ty, sync)))(i)
 }
 
 pub fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
@@ -116,16 +116,20 @@ pub fn name(i: &str) -> IResult<&str, &str> {
     value((), tag("session")),
     value((), tag("struct")),
     value((), tag("enum")),
-    value((), tag("->")),
-    value((), tag("#")),
-    value((), tag("[")),
-    value((), tag("]")),
-    value((), tag("{")),
-    value((), tag("}")),
-    value((), tag(",")),
-    value((), tag(":")),
-    value((), tag("=")),
-    value((), tag("|")),
+    value((), alt((
+      tag("->"),
+      tag("#"),
+      tag("["),
+      tag("]"),
+      tag("{"),
+      tag("}"),
+      tag("("),
+      tag(")"),
+      tag(","),
+      tag(":"),
+      tag("="),
+      tag("|"),
+    ))),
     value((), constant),
   ))), anychar)))(i)
 }
@@ -225,11 +229,5 @@ pub fn line_comment(i: &str) -> IResult<&str, &str> {
 
 pub fn ws(i: &str) -> IResult<&str, &str> {
   let chars = " \t\r\n";
-  take_while(move |c| chars.contains(c))(i)
-}
-
-pub fn raw_ws(i: &str) -> IResult<&str, &str> {
-  let chars = " \t\r\n";
-
   take_while(move |c| chars.contains(c))(i)
 }

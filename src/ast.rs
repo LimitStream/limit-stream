@@ -1,39 +1,38 @@
-use std::collections::HashMap;
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Def<'a> {
   SessionDef(SessionDef<'a>),
   StructDef(StructDef<'a>),
   EnumDef(EnumDef<'a>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SessionDef<'a> {
   pub name: &'a str,
   pub session: SessionType<'a>
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct StructDef<'a> {
   pub name: &'a str,
   pub annotation: Annotation,
   pub records: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EnumDef<'a> {
   pub name: &'a str,
   pub items: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TypeOrName<'a> {
   Name(&'a str),
   Type(Box<Type<'a>>)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type<'a> {
   Session(SessionType<'a>),
   Struct(StructDef<'a>),
@@ -43,10 +42,10 @@ pub enum Type<'a> {
   Constant(Constant),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct SessionType<'a>(pub Vec<Session<'a>>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Session<'a> {
   Recv(TypeOrName<'a>),
   Send(TypeOrName<'a>),
@@ -54,16 +53,16 @@ pub enum Session<'a> {
   Endpoint,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TypeUnion<'a> (pub TypeOrName<'a>, pub TypeOrName<'a>);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ContainerType<'a> {
   Array(Box<Type<'a>>, Option<usize>),
   Dict(SimpleType, Box<Type<'a>>)
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SimpleType {
   Bool,
   Int,
@@ -73,7 +72,7 @@ pub enum SimpleType {
   String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Constant {
   String(String),
   Float(f64),
@@ -82,7 +81,7 @@ pub enum Constant {
   Bool(bool),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Annotation {
 
 }
