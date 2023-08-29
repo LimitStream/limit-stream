@@ -1,3 +1,3 @@
 pub mod ast;
 pub mod parser;
-pub mod graph;
+pub mod type_checker;
