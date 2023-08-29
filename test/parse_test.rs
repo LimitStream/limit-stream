@@ -1,5 +1,5 @@
-use limit_stream::ast::{SessionType, Type, Session, TypeOrName, SimpleType, Constant, Def, EnumDef, StructDef, Annotation};
-use limit_stream::parser::{_type, def, enum_def, enum_item, struct_item, struct_def};
+use limit_stream::ast::{SessionType, Type, Session, TypeOrName, SimpleType, Constant, Def, EnumDef, StructDef, Annotation, SessionDef};
+use limit_stream::parser::{_type, def, enum_def, enum_item, struct_item, struct_def, session_def};
 
 
 
@@ -18,6 +18,15 @@ gen_test!(_type, type_test, "recv string -> send int -> send int -> end", Type::
   Session::Send(TypeOrName::Type(Box::new(Type::SimpleType(SimpleType::Int)))),
   Session::Endpoint,
   ])));
+
+
+gen_test!(session_def, session_def_test, "session a = recv 1 -> recv 2 -> send 3 -> end", SessionDef { name: "a", session: SessionType(vec![
+  Session::Recv(TypeOrName::Type(Box::new(Type::Constant(Constant::Uint(1))))),
+  Session::Recv(TypeOrName::Type(Box::new(Type::Constant(Constant::Uint(2))))),
+  Session::Send(TypeOrName::Type(Box::new(Type::Constant(Constant::Uint(3))))),
+  Session::Endpoint,
+  ]) });
+
 
 gen_test!(struct_item, struct_item_test, "user: User = 0", ("user", (TypeOrName::Name("User"), Some(0))));
 
