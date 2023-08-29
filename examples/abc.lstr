@@ -32,4 +32,4 @@ struct User {
   description: string = 2,
 }
 
-session GetUserSB = recv "End" -> recv User -> recv float -> send SB -> send int -> end
+session GetUserSB = recv "version" -> recv 1.1 -> recv User -> recv float -> send SB -> send int -> end

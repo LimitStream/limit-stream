@@ -82,6 +82,18 @@ pub enum Constant {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Annotation {
+pub struct Macro<'a, T> {
+  pub appends: Vec<Append<'a>>,
+  pub body: Box<T>,
+}
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum Append<'a> {
+  LineComment(&'a str),
+  DocsComment(&'a str),
+  Annotation(Annotation),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct Annotation {
 }

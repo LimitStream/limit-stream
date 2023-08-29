@@ -9,7 +9,7 @@ use nom::sequence::{preceded, separated_pair, terminated, pair, tuple};
 use nom::number::complete::{float, double};
 use nom::multi::{many1, many0, separated_list1, separated_list0};
 
-use crate::ast::{Constant, SimpleType, StructDef, SessionType, TypeUnion, Type, TypeOrName, Session, SessionDef, Def, Annotation, EnumDef};
+use crate::ast::{Constant, SimpleType, StructDef, SessionType, TypeUnion, Type, TypeOrName, Session, SessionDef, Def, Annotation, EnumDef, Append, Macro};
 
 
 pub fn def(i: &str) -> IResult<&str, Def> {
@@ -219,12 +219,44 @@ pub fn false_lit(i: &str) -> IResult<&str, bool> {
   value(false, tag("false"))(i)
 }
 
+pub fn _macro<'a, R: Clone>(f: fn(&'a str) -> IResult<&'a str, R>) -> impl Fn(&'a str) -> IResult<&'a str, Macro<'a, R>> {
+  move |i: &'a str| {
+    let (i, appends) = many0(preceded(ws, append))(i)?;
+    map(f, move |r| Macro { appends: appends.clone(), body: Box::new(r) } )(i)
+  }
+}
+
+pub fn append(i: &str) -> IResult<&str, Append> {
+  alt((
+    map(docu_comment, Append::DocsComment),
+    map(line_comment, Append::LineComment),
+    map(annotation, Append::Annotation),
+  ))(i)
+}
+
+pub fn annotation(i: &str) -> IResult<&str, Annotation> {
+  map(tuple((
+    preceded(ws, tag("#")),
+    preceded(ws, tag("[")),
+
+    preceded(ws, tag("]")),
+  )), |(_, _, _)| Annotation {  })(i)
+}
+
 pub fn docu_comment(i: &str) -> IResult<&str, &str> {
-  todo!()
+  recognize(tuple((
+    preceded(ws, tag("///")),
+    many0(recognize(tuple((not(tag("\n")), anychar)))),
+    opt(tag("\n"))
+  )))(i)
 }
 
 pub fn line_comment(i: &str) -> IResult<&str, &str> {
-  todo!()
+  recognize(tuple((
+    preceded(ws, tag("//")),
+    many0(recognize(tuple((not(tag("\n")), anychar)))),
+    opt(tag("\n"))
+  )))(i)
 }
 
 pub fn ws(i: &str) -> IResult<&str, &str> {
