@@ -156,7 +156,7 @@ pub fn constant(i: &str) -> IResult<&str, Constant> {
 }
 
 pub fn double_lit(i: &str) -> IResult<&str, f64> {
-  double(i)
+  map_res(recognize(tuple((signed_number, tag("."), number))), str::parse)(i)
 }
 
 /*
