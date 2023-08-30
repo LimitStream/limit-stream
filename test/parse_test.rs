@@ -38,7 +38,7 @@ end
 gen_test!(
     session_def,
     session_def_test,
-    "session a = recv 1 -> recv 2 -> send 3 -> end",
+    "channel a = recv 1 -> recv 2 -> send 3 -> end",
     SessionDef {
         name: "a",
         session: SessionType(vec![

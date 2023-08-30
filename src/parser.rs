@@ -25,7 +25,7 @@ pub fn def(i: &str) -> IResult<&str, Def> {
 pub fn session_def(i: &str) -> IResult<&str, SessionDef> {
     map(
         tuple((
-            preceded(ws, tag("session")),
+            preceded(ws, tag("channel")),
             preceded(ws, name),
             preceded(ws, tag("=")),
             preceded(ws, session_type),
@@ -125,6 +125,10 @@ pub fn session(i: &str) -> IResult<&str, Session> {
             Session::Offer,
         ),
         map(
+            preceded(ws, preceded(tag("choose"), preceded(ws, type_union))),
+            Session::Choose,
+        ),
+        map(
             preceded(ws, preceded(tag("recv"), preceded(ws, type_or_name))),
             Session::Recv,
         ),
@@ -155,7 +159,8 @@ pub fn name(i: &str) -> IResult<&str, &str> {
             value((), tag("recv")),
             value((), tag("send")),
             value((), tag("offer")),
-            value((), tag("session")),
+            value((), tag("choose")),
+            value((), tag("channel")),
             value((), tag("struct")),
             value((), tag("enum")),
             value(

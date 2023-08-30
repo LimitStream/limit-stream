@@ -101,6 +101,8 @@ pub enum Session<'a> {
     Recv(TypeOrName<'a>),
     Send(TypeOrName<'a>),
     Offer(TypeUnion<'a>),
+    Choose(TypeUnion<'a>),
+
     Endpoint,
 }
 
