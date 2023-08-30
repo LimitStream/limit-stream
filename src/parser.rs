@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::ops::Deref;
 
 use nom::branch::alt;
 use nom::bytes::complete::{escaped, escaped_transform, is_a, is_not, tag};
@@ -11,8 +12,24 @@ use nom::{bytes::complete::take_while, error::ParseError, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, Session, SessionDef, SessionType,
-    SimpleType, StructDef, Type, TypeOrName, TypeUnion,
+    SimpleType, StructDef, Type, TypeOrName, TypeUnion, SessionOrName,
 };
+
+
+/*
+#[macro_export]
+macro_rules! macro_gen {
+    ($f: expr) => {
+        |i: & str| {
+            let (i, appends) = many0(preceded(ws, append))(i)?;
+            map($f, move |r| Macro {
+                appends: appends.clone(),
+                body: Box::new(r),
+            })(i)
+        }
+    };
+}
+// */
 
 pub fn def(i: &str) -> IResult<&str, Def> {
     alt((
@@ -25,10 +42,10 @@ pub fn def(i: &str) -> IResult<&str, Def> {
 pub fn session_def(i: &str) -> IResult<&str, SessionDef> {
     map(
         tuple((
-            preceded(ws, tag("session")),
+            preceded(ws, tag("channel")),
             preceded(ws, name),
             preceded(ws, tag("=")),
-            preceded(ws, session_type),
+            preceded(ws, _macro(preceded(ws,session_type))),
         )),
         |(_, name, _, session)| SessionDef { name, session },
     )(i)
@@ -42,13 +59,12 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
             preceded(ws, tag("{")),
             preceded(
                 ws,
-                separated_list0(preceded(ws, char(',')), preceded(ws, struct_item)),
+                separated_list0(preceded(ws, char(',')), preceded(ws, _macro(preceded(ws, struct_item)))),
             ),
             preceded(ws, tag("}")),
         )),
         |(_, name, _, items, _)| StructDef {
             name,
-            annotation: Annotation {},
             records: items,
         },
     )(i)
@@ -62,7 +78,7 @@ pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
             preceded(ws, tag("{")),
             preceded(
                 ws,
-                separated_list0(preceded(ws, char(',')), preceded(ws, enum_item)),
+                separated_list0(preceded(ws, char(',')), preceded(ws, _macro(preceded(ws, enum_item)))),
             ),
             preceded(ws, tag("}")),
         )),
@@ -104,15 +120,22 @@ pub fn type_or_name(i: &str) -> IResult<&str, TypeOrName> {
 
 pub fn _type(i: &str) -> IResult<&str, Type> {
     alt((
-        map(session_type, Type::Session),
+        map(session_type, Type::SessionType),
         map(simple_type, Type::SimpleType),
         map(constant, Type::Constant),
     ))(i)
 }
 
+pub fn session_or_name(i: &str) -> IResult<&str, SessionOrName> {
+    alt((
+        map(session, |t| SessionOrName::Session(Box::new(t))),
+        map(name, SessionOrName::Name),
+    ))(i)
+}
+
 pub fn session_type(i: &str) -> IResult<&str, SessionType> {
     map(
-        separated_list1(preceded(ws, tag("->")), preceded(ws, session)),
+        separated_list1(preceded(ws, tag("->")), preceded(ws, _macro(preceded(ws, session)))),
         SessionType,
     )(i)
 }
@@ -138,9 +161,9 @@ pub fn session(i: &str) -> IResult<&str, Session> {
 pub fn type_union(i: &str) -> IResult<&str, TypeUnion> {
     map(
         separated_pair(
-            preceded(ws, type_or_name),
+            preceded(ws, session_or_name),
             preceded(ws, tag("|")),
-            preceded(ws, type_or_name),
+            preceded(ws, session_or_name),
         ),
         |(a, b)| TypeUnion(a, b),
     )(i)
@@ -273,17 +296,31 @@ pub fn false_lit(i: &str) -> IResult<&str, bool> {
     value(false, tag("false"))(i)
 }
 
-pub fn _macro<'a, R: Clone>(
-    f: fn(&'a str) -> IResult<&'a str, R>,
-) -> impl Fn(&'a str) -> IResult<&'a str, Macro<'a, R>> {
-    move |i: &'a str| {
-        let (i, appends) = many0(preceded(ws, append))(i)?;
-        map(f, move |r| Macro {
-            appends: appends.clone(),
+// /*
+pub fn _macro<
+    'i,
+    // 'i1: 'i,
+    'r: 'i,
+    R: Clone,
+    // I: FnMut(&str) -> IResult<&str, R>,
+    I: FnMut(&'i str) -> IResult<&'i str, R>,
+    // G: Fn(&'a str) -> IResult<&'a str, Macro<'a, R>>,
+>(
+    // f: impl FnMut(&'a str) -> IResult<&'a str, R>,
+// ) -> impl FnMut(&'a str) -> IResult<&'a str, Macro<'a, R>> {
+    mut f: I,
+// ) -> impl FnMut(&str) -> IResult<&str, Macro<R>> {
+) -> impl FnMut(&'i str) -> IResult<&'i str, Macro<'i, R>> {
+    move |i: &'i str| {
+        let (i, appends): (&'i str, Vec<Append<'i>>) = many0(preceded(ws, append))(i)?;
+        let (i, r): (&'i str, R) = f(i)?;
+        Ok((i, Macro {
+            appends: appends,
             body: Box::new(r),
-        })(i)
+        }))
     }
 }
+//  */
 
 pub fn append(i: &str) -> IResult<&str, Append> {
     alt((

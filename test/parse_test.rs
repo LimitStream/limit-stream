@@ -16,9 +16,9 @@ macro_rules! gen_test {
 gen_test!(
     _type,
     type_test,
-    r"recv string -> 
-send int -> 
-send int -> 
+    r"recv string ->
+send int ->
+send int ->
 end
 ",
     Type::Session(SessionType(vec![
@@ -75,7 +75,6 @@ struct User {
 ",
     StructDef {
         name: "User",
-        annotation: Annotation {},
         records: vec![
             (
                 "name",

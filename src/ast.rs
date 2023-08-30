@@ -20,14 +20,14 @@ pub enum Def<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SessionDef<'a> {
     pub name: &'a str,
-    pub session: SessionType<'a>,
+    pub session: Macro<'a, SessionType<'a>>,
 }
 
 /// ```pest
 /// session_type =
 ///  { "end"
-///  | ("offer" ~ union_type)
-///  | ("choose" ~ union_type)
+///  | ("offer" ~ session_union)
+///  | ("choose" ~ session_union)
 ///  | (session_kind ~ type_or_name) ~ construct_session_type*
 ///  }
 ///
@@ -41,7 +41,7 @@ pub struct SessionDef<'a> {
 ///  }
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct SessionType<'a>(pub Vec<Session<'a>>);
+pub struct SessionType<'a>(pub Vec<Macro<'a, Session<'a>>>);
 
 /// ```pest
 /// struct_def = {
@@ -58,8 +58,7 @@ pub struct SessionType<'a>(pub Vec<Session<'a>>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructDef<'a> {
     pub name: &'a str,
-    pub annotation: Annotation,
-    pub records: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
+    pub records: Vec<Macro<'a, (&'a str, (TypeOrName<'a>, Option<u64>))>>,
 }
 
 /// enum_def = {
@@ -74,7 +73,7 @@ pub struct StructDef<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumDef<'a> {
     pub name: &'a str,
-    pub items: Vec<(&'a str, (TypeOrName<'a>, Option<u64>))>,
+    pub items: Vec<Macro<'a, (&'a str, (TypeOrName<'a>, Option<u64>))>>,
 }
 /// ```pest
 /// type_or_name = { _type | name }
@@ -88,12 +87,22 @@ pub enum TypeOrName<'a> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type<'a> {
-    Session(SessionType<'a>),
-    Struct(StructDef<'a>),
-    Enum(EnumDef<'a>),
-    ContainerType(ContainerType<'a>),
+    SessionType(SessionType<'a>),
+    // Struct(StructDef<'a>),
+    // Enum(EnumDef<'a>),
+    ContainerType(ContainerType<'a>), // todo
     SimpleType(SimpleType),
     Constant(Constant),
+}
+
+/// ```pest
+/// session_or_name = { session | name }
+///
+/// ```
+#[derive(Debug, Clone, PartialEq)]
+pub enum SessionOrName<'a> {
+    Name(&'a str),
+    Session(Box<Session<'a>>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -105,13 +114,13 @@ pub enum Session<'a> {
 }
 
 /// ```pest
-/// union_type = {
-///   type_or_name ~ "|" ~ type_or_name
+/// session_union = {
+///   session_or_name ~ "|" ~ session_or_name
 /// }
 ///
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct TypeUnion<'a>(pub TypeOrName<'a>, pub TypeOrName<'a>);
+pub struct TypeUnion<'a>(pub SessionOrName<'a>, pub SessionOrName<'a>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContainerType<'a> {

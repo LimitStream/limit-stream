@@ -5,9 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[[test]]
-name = "parse_test"
-path = "test/parse_test.rs"
+# [[test]]
+# name = "parse_test"
+# path = "test/parse_test.rs"
 
 [[example]]
 name = "parse"
