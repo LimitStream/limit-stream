@@ -11,7 +11,7 @@ struct Formatter {
     // ...
 }
 
-impl Codegen<Formatter> for MacrodDef {
+impl<'a> Codegen<Formatter> for MacrodDef<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         todo!()
     }

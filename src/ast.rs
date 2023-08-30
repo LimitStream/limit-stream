@@ -1,5 +1,5 @@
 
-pub struct MacrodDef<'a, 'b> (pub Macro<'a, Def<'b>>);
+pub struct MacrodDef<'a> (pub Macro<'a, Def<'a>>);
 
 /// ```pest
 /// defs = {
