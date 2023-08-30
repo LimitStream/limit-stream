@@ -1,4 +1,3 @@
-
 use nom::branch::alt;
 use nom::bytes::complete::{escaped_transform, is_a, tag};
 use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
@@ -9,10 +8,9 @@ use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
 use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
-    Annotation, Append, Constant, Def, EnumDef, Macro, Session, SessionDef, SessionType,
-    SimpleType, StructDef, Type, TypeOrName, TypeUnion, SessionOrName, MacrodDef,
+    Annotation, Append, Constant, Def, EnumDef, Macro, MacrodDef, Session, SessionDef,
+    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, TypeUnion,
 };
-
 
 /*
 #[macro_export]
@@ -47,7 +45,7 @@ pub fn session_def(i: &str) -> IResult<&str, SessionDef> {
             preceded(ws, tag("channel")),
             preceded(ws, name),
             preceded(ws, tag("=")),
-            preceded(ws, _macro(preceded(ws,session_type))),
+            preceded(ws, _macro(preceded(ws, session_type))),
         )),
         |(_, name, _, session)| SessionDef { name, session },
     )(i)
@@ -61,7 +59,10 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
             preceded(ws, tag("{")),
             preceded(
                 ws,
-                separated_list0(preceded(ws, char(',')), preceded(ws, _macro(preceded(ws, struct_item)))),
+                separated_list0(
+                    preceded(ws, char(',')),
+                    preceded(ws, _macro(preceded(ws, struct_item))),
+                ),
             ),
             preceded(ws, tag("}")),
         )),
@@ -80,7 +81,10 @@ pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
             preceded(ws, tag("{")),
             preceded(
                 ws,
-                separated_list0(preceded(ws, char(',')), preceded(ws, _macro(preceded(ws, enum_item)))),
+                separated_list0(
+                    preceded(ws, char(',')),
+                    preceded(ws, _macro(preceded(ws, enum_item))),
+                ),
             ),
             preceded(ws, tag("}")),
         )),
@@ -137,7 +141,10 @@ pub fn session_or_name(i: &str) -> IResult<&str, SessionOrName> {
 
 pub fn session_type(i: &str) -> IResult<&str, SessionType> {
     map(
-        separated_list1(preceded(ws, tag("->")), preceded(ws, _macro(preceded(ws, session)))),
+        separated_list1(
+            preceded(ws, tag("->")),
+            preceded(ws, _macro(preceded(ws, session))),
+        ),
         SessionType,
     )(i)
 }
@@ -314,21 +321,23 @@ pub fn _macro<
     // G: Fn(&'a str) -> IResult<&'a str, Macro<'a, R>>,
 >(
     // f: impl FnMut(&'a str) -> IResult<&'a str, R>,
-// ) -> impl FnMut(&'a str) -> IResult<&'a str, Macro<'a, R>> {
+    // ) -> impl FnMut(&'a str) -> IResult<&'a str, Macro<'a, R>> {
     mut f: I,
-// ) -> impl FnMut(&str) -> IResult<&str, Macro<R>> {
+    // ) -> impl FnMut(&str) -> IResult<&str, Macro<R>> {
 ) -> impl FnMut(&'i str) -> IResult<&'i str, Macro<'i, R>> {
     move |i: &'i str| {
         let (i, appends): (&'i str, Vec<Append<'i>>) = many0(preceded(ws, append))(i)?;
         let (i, r): (&'i str, R) = f(i)?;
-        Ok((i, Macro {
-            appends: appends,
-            body: Box::new(r),
-        }))
+        Ok((
+            i,
+            Macro {
+                appends: appends,
+                body: Box::new(r),
+            },
+        ))
     }
 }
 //  */
-
 pub fn append(i: &str) -> IResult<&str, Append> {
     alt((
         map(docu_comment, Append::DocsComment),

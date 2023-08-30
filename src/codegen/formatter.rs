@@ -2,8 +2,6 @@ use crate::ast::MacrodDef;
 
 use super::Codegen;
 
-
-
 struct Formatter {
     // ...
     // The current indentation level.
