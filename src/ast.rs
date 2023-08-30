@@ -104,15 +104,15 @@ pub enum Type<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum SessionOrName<'a> {
     Name(&'a str),
-    Session(Box<Session<'a>>),
+    Session(Box<SessionType<'a>>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Session<'a> {
     Recv(TypeOrName<'a>),
     Send(TypeOrName<'a>),
-    Offer(TypeUnion<'a>),
-    Choose(TypeUnion<'a>),
+    Offer(SessionUnion<'a>),
+    Choose(SessionUnion<'a>),
 
     Endpoint,
 }
@@ -124,7 +124,7 @@ pub enum Session<'a> {
 ///
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct TypeUnion<'a>(pub SessionOrName<'a>, pub SessionOrName<'a>);
+pub struct SessionUnion<'a>(pub SessionOrName<'a>, pub SessionOrName<'a>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContainerType<'a> {

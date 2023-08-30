@@ -9,7 +9,7 @@ use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, MacrodDef, Session, SessionDef,
-    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, TypeUnion,
+    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, SessionUnion,
 };
 
 /*
@@ -134,7 +134,7 @@ pub fn _type(i: &str) -> IResult<&str, Type> {
 
 pub fn session_or_name(i: &str) -> IResult<&str, SessionOrName> {
     alt((
-        map(session, |t| SessionOrName::Session(Box::new(t))),
+        map(session_type, |t| SessionOrName::Session(Box::new(t))),
         map(name, SessionOrName::Name),
     ))(i)
 }
@@ -171,14 +171,14 @@ pub fn session(i: &str) -> IResult<&str, Session> {
     ))(i)
 }
 
-pub fn type_union(i: &str) -> IResult<&str, TypeUnion> {
+pub fn type_union(i: &str) -> IResult<&str, SessionUnion> {
     map(
         separated_pair(
             preceded(ws, session_or_name),
             preceded(ws, tag("|")),
             preceded(ws, session_or_name),
         ),
-        |(a, b)| TypeUnion(a, b),
+        |(a, b)| SessionUnion(a, b),
     )(i)
 }
 
