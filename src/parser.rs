@@ -1,14 +1,12 @@
-use std::collections::HashMap;
-use std::ops::Deref;
 
 use nom::branch::alt;
-use nom::bytes::complete::{escaped, escaped_transform, is_a, is_not, tag};
-use nom::character::complete::{alpha1, anychar, char, digit1, hex_digit1, oct_digit1, one_of};
-use nom::combinator::{cut, fail, map, map_res, not, opt, recognize, value};
+use nom::bytes::complete::{escaped_transform, is_a, tag};
+use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
+use nom::combinator::{cut, map, map_res, not, opt, recognize, value};
 use nom::multi::{many0, many1, separated_list0, separated_list1};
-use nom::number::complete::{double, float};
+
 use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
-use nom::{bytes::complete::take_while, error::ParseError, IResult};
+use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, Session, SessionDef, SessionType,
@@ -148,6 +146,10 @@ pub fn session(i: &str) -> IResult<&str, Session> {
             Session::Offer,
         ),
         map(
+            preceded(ws, preceded(tag("choose"), preceded(ws, type_union))),
+            Session::Choose,
+        ),
+        map(
             preceded(ws, preceded(tag("recv"), preceded(ws, type_or_name))),
             Session::Recv,
         ),
@@ -178,7 +180,8 @@ pub fn name(i: &str) -> IResult<&str, &str> {
             value((), tag("recv")),
             value((), tag("send")),
             value((), tag("offer")),
-            value((), tag("session")),
+            value((), tag("choose")),
+            value((), tag("channel")),
             value((), tag("struct")),
             value((), tag("enum")),
             value(

@@ -1,8 +1,8 @@
 use limit_stream::ast::{
-    Annotation, Constant, Def, EnumDef, Session, SessionDef, SessionType, SimpleType, StructDef,
+    Annotation, Constant, EnumDef, Session, SessionDef, SessionType, SimpleType, StructDef,
     Type, TypeOrName,
 };
-use limit_stream::parser::{_type, def, enum_def, enum_item, session_def, struct_def, struct_item};
+use limit_stream::parser::{_type, enum_def, enum_item, session_def, struct_def, struct_item};
 
 macro_rules! gen_test {
     ($parse: expr, $testname: ident, $src: expr, $result: expr) => {
@@ -38,7 +38,7 @@ end
 gen_test!(
     session_def,
     session_def_test,
-    "session a = recv 1 -> recv 2 -> send 3 -> end",
+    "channel a = recv 1 -> recv 2 -> send 3 -> end",
     SessionDef {
         name: "a",
         session: SessionType(vec![
