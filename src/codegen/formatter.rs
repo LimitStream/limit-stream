@@ -1,9 +1,10 @@
-use std::fmt::format;
+use std::{fmt::format, collections::HashMap};
 
-use crate::ast::{MacrodDef, Macro, Append, Annotation, Constant, SimpleType, SessionUnion, SessionOrName, Session, TypeOrName, Type, SessionType};
+use crate::ast::{MacrodDef, Macro, Append, Annotation, Constant, SimpleType, SessionUnion, SessionOrName, Session, TypeOrName, Type, SessionType, EnumDef, EnumItem};
 
 use super::Codegen;
 
+#[derive(Debug, Clone)]
 struct Formatter {
     // ...
     // The current indentation level.
@@ -13,9 +14,29 @@ struct Formatter {
 }
 
 impl Formatter {
+    pub fn append_indent(&self) -> Self {
+        Self {
+            indent: self.indent +1,
+            ..self.clone()
+        }
+    }
     pub fn get_tab(&self) -> String {
         // TODO
         " ".repeat(self.tab_size).repeat(self.indent)
+    }
+}
+
+
+impl<'a> Codegen<Formatter> for EnumDef<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        // self.items.iter().map(|i| i)
+        todo!()
+    }
+}
+
+impl<'a> Codegen<Formatter> for  (&'a str, (TypeOrName<'a>, Option<u64>)) {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        todo!()
     }
 }
 
@@ -56,15 +77,17 @@ impl<'a> Codegen<Formatter> for SessionOrName<'a> {
 
 impl<'a> Codegen<Formatter> for SessionType<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        todo!()
+        self.0.iter().map(|m| {
+            format!("{}{}", generator.get_tab(), m.generate(generator))
+        }).collect::<Vec<String>>().join(" -> ") // FIXME
     }
 }
 
 impl<'a> Codegen<Formatter> for Session<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         match self {
-            Session::Recv(recv) => todo!(),
-            Session::Send(send) => todo!(),
+            Session::Recv(ty) => format!("recv {}", ty.generate(generator)),
+            Session::Send(ty) => format!("send {}", ty.generate(generator)),
             Session::Offer(union) => format!("offer {}", union.generate(generator)),
             Session::Choose(union) => format!("choose {}", union.generate(generator)),
             Session::Endpoint => "end".to_string(),

@@ -9,7 +9,7 @@ use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, MacrodDef, Session, SessionDef,
-    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, SessionUnion,
+    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, SessionUnion, EnumItem, StructItem,
 };
 
 /*
@@ -68,7 +68,7 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
         )),
         |(_, name, _, items, _)| StructDef {
             name,
-            records: items,
+            items,
         },
     )(i)
 }
@@ -92,7 +92,7 @@ pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
     )(i)
 }
 
-pub fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
+pub fn struct_item(i: &str) -> IResult<&str, StructItem> {
     map(
         tuple((
             preceded(ws, name),
@@ -100,11 +100,11 @@ pub fn struct_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> 
             preceded(ws, type_or_name),
             opt(preceded(preceded(ws, tag("=")), preceded(ws, uint_lit))),
         )),
-        |(name, _, ty, sync)| (name, (ty, sync)),
+        |(name, _, ty, sync)| StructItem(name, ty, sync),
     )(i)
 }
 
-pub fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
+pub fn enum_item(i: &str) -> IResult<&str, EnumItem> {
     map(
         tuple((
             preceded(ws, name),
@@ -113,7 +113,7 @@ pub fn enum_item(i: &str) -> IResult<&str, (&str, (TypeOrName, Option<u64>))> {
             preceded(ws, tag(")")),
             opt(preceded(preceded(ws, tag("=")), preceded(ws, uint_lit))),
         )),
-        |(name, _, ty, _, sync)| (name, (ty, sync)),
+        |(name, _, ty, _, sync)| EnumItem(name, ty, sync),
     )(i)
 }
 

@@ -53,30 +53,37 @@ pub struct SessionType<'a>(pub Vec<Macro<'a, Session<'a>>>);
 ///    ~ "}"
 /// }
 ///
-/// struct_item = {
-///   name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
-/// }
+
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructDef<'a> {
     pub name: &'a str,
-    pub records: Vec<Macro<'a, (&'a str, (TypeOrName<'a>, Option<u64>))>>,
+    pub items: Vec<Macro<'a, StructItem<'a>>>,
 }
+
+/// struct_item = {
+///   name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
+/// }
+#[derive(Debug, Clone, PartialEq)]
+pub struct StructItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);
 
 /// enum_def = {
 ///   "enum" ~ name ~ "{" ~
 ///   (enum_item ~ ("," ~ enum_item) ~ ","?)?
 ///    ~ "}"
 /// }
-///
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnumDef<'a> {
+    pub name: &'a str,
+    pub items: Vec<Macro<'a, EnumItem<'a>>>,
+}
+
 /// enum_item = {
 ///   name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
 /// }
 #[derive(Debug, Clone, PartialEq)]
-pub struct EnumDef<'a> {
-    pub name: &'a str,
-    pub items: Vec<Macro<'a, (&'a str, (TypeOrName<'a>, Option<u64>))>>,
-}
+pub struct EnumItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);
+
 /// ```pest
 /// type_or_name = { _type | name }
 ///
