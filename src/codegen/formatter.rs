@@ -6,11 +6,11 @@ use crate::ast::{
 use super::Codegen;
 
 #[derive(Debug, Clone)]
-struct Formatter {
+pub struct Formatter {
     // ...
     // The current indentation level.
-    tab_size: usize,
-    indent: usize,
+    pub tab_size: usize,
+    pub indent: usize,
     // ...
 }
 
@@ -218,7 +218,7 @@ impl<'a, T: Codegen<Formatter>> Codegen<Formatter> for Macro<'a, T> {
             .map(|f| format!("{}{}\n", generator.get_tab(), f.generate(generator)))
             .collect::<String>();
         let body = self.body.generate(generator);
-        format!("{}{}{}", append, generator.get_tab(), body)
+        format!("{}{}", append, body)
     }
 }
 

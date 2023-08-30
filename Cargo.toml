@@ -18,6 +18,11 @@ path = "src/main.rs"
 name = "parse"
 path = "examples/parse.rs"
 
+
+[[example]]
+name = "format"
+path = "examples/format.rs"
+
 [dependencies]
 clap = { version = "4.4.1", features = ["derive", "unicode"] }
 nom = "7.1.3"
