@@ -1,6 +1,7 @@
-use std::{fmt::format, collections::HashMap};
-
-use crate::ast::{MacrodDef, Macro, Append, Annotation, Constant, SimpleType, SessionUnion, SessionOrName, Session, TypeOrName, Type, SessionType, EnumDef, EnumItem};
+use crate::ast::{
+    Annotation, Append, Constant, Def, EnumDef, EnumItem, Macro, MacrodDef, Session, SessionDef,
+    SessionOrName, SessionType, SessionUnion, SimpleType, StructDef, StructItem, Type, TypeOrName,
+};
 
 use super::Codegen;
 
@@ -16,7 +17,7 @@ struct Formatter {
 impl Formatter {
     pub fn append_indent(&self) -> Self {
         Self {
-            indent: self.indent +1,
+            indent: self.indent + 1,
             ..self.clone()
         }
     }
@@ -26,17 +27,98 @@ impl Formatter {
     }
 }
 
-
-impl<'a> Codegen<Formatter> for EnumDef<'a> {
+impl<'a> Codegen<Formatter> for MacrodDef<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        // self.items.iter().map(|i| i)
-        todo!()
+        self.0.generate(generator)
     }
 }
 
-impl<'a> Codegen<Formatter> for  (&'a str, (TypeOrName<'a>, Option<u64>)) {
+impl<'a> Codegen<Formatter> for Def<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        todo!()
+        match self {
+            Def::SessionDef(d) => d.generate(generator),
+            Def::StructDef(d) => d.generate(generator),
+            Def::EnumDef(d) => d.generate(generator),
+        }
+    }
+}
+
+impl<'a> Codegen<Formatter> for SessionDef<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        let session = self.session.generate(&mut generator.append_indent());
+        format!(
+            "{}session {} = \n{}{}",
+            generator.get_tab(),
+            self.name,
+            generator.get_tab(),
+            session
+        )
+    }
+}
+
+impl<'a> Codegen<Formatter> for StructDef<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        let items = self
+            .items
+            .iter()
+            .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
+            .collect::<String>();
+        format!(
+            "{}struct {} {{\n{}{}}}",
+            generator.get_tab(),
+            self.name,
+            items,
+            generator.get_tab()
+        )
+    }
+}
+
+impl<'a> Codegen<Formatter> for EnumDef<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        let items = self
+            .items
+            .iter()
+            .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
+            .collect::<String>();
+        format!(
+            "{}enum {} {{\n{}{}}}",
+            generator.get_tab(),
+            self.name,
+            items,
+            generator.get_tab()
+        )
+    }
+}
+
+impl<'a> Codegen<Formatter> for StructItem<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        format!(
+            "{}{}: {}{}",
+            generator.get_tab(),
+            self.0,
+            self.1.generate(generator),
+            if let Some(s) = self.2 {
+                format!(" = {}", s.to_string())
+            } else {
+                "".to_string()
+            }
+        )
+    }
+}
+
+impl<'a> Codegen<Formatter> for EnumItem<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        format!(
+            "{}{}({}){}",
+            generator.get_tab(),
+            self.0,
+            self.1.generate(generator),
+            if let Some(s) = self.2 {
+                format!(" = {}", s.to_string())
+            } else {
+                "".to_string()
+            }
+        )
     }
 }
 
@@ -62,7 +144,11 @@ impl<'a> Codegen<Formatter> for Type<'a> {
 
 impl<'a> Codegen<Formatter> for SessionUnion<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        format!("{} | {}", self.0.generate(generator), self.1.generate(generator))
+        format!(
+            "{} | {}",
+            self.0.generate(generator),
+            self.1.generate(generator)
+        )
     }
 }
 
@@ -77,9 +163,11 @@ impl<'a> Codegen<Formatter> for SessionOrName<'a> {
 
 impl<'a> Codegen<Formatter> for SessionType<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        self.0.iter().map(|m| {
-            format!("{}{}", generator.get_tab(), m.generate(generator))
-        }).collect::<Vec<String>>().join(" -> ") // FIXME
+        self.0
+            .iter()
+            .map(|m| format!("{}{}", generator.get_tab(), m.generate(generator)))
+            .collect::<Vec<String>>()
+            .join(" -> ") // FIXME
     }
 }
 
@@ -104,7 +192,8 @@ impl Codegen<Formatter> for SimpleType {
             SimpleType::Float => "float",
             SimpleType::Double => "double",
             SimpleType::String => "string",
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
@@ -116,15 +205,18 @@ impl Codegen<Formatter> for Constant {
             Constant::Int(i) => i.to_string(),
             Constant::Uint(u) => u.to_string(),
             Constant::Bool(b) => b.to_string(),
-        }.to_string()
+        }
+        .to_string()
     }
 }
 
 impl<'a, T: Codegen<Formatter>> Codegen<Formatter> for Macro<'a, T> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        let append = self.appends.iter().map(|f| {
-            format!("{}{}\n", generator.get_tab(), f.generate(generator))
-        }).collect::<String>();
+        let append = self
+            .appends
+            .iter()
+            .map(|f| format!("{}{}\n", generator.get_tab(), f.generate(generator)))
+            .collect::<String>();
         let body = self.body.generate(generator);
         format!("{}{}{}", append, generator.get_tab(), body)
     }
@@ -133,8 +225,7 @@ impl<'a, T: Codegen<Formatter>> Codegen<Formatter> for Macro<'a, T> {
 impl<'a> Codegen<Formatter> for Append<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         match self {
-            Append::LineComment(s) |
-            Append::DocsComment(s) => s.to_string(),
+            Append::LineComment(s) | Append::DocsComment(s) => s.to_string(),
             Append::Annotation(a) => a.generate(generator),
         }
     }

@@ -8,8 +8,8 @@ use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
 use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
-    Annotation, Append, Constant, Def, EnumDef, Macro, MacrodDef, Session, SessionDef,
-    SessionOrName, SessionType, SimpleType, StructDef, Type, TypeOrName, SessionUnion, EnumItem, StructItem,
+    Annotation, Append, Constant, Def, EnumDef, EnumItem, Macro, MacrodDef, Session, SessionDef,
+    SessionOrName, SessionType, SessionUnion, SimpleType, StructDef, StructItem, Type, TypeOrName,
 };
 
 /*
@@ -66,10 +66,7 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
             ),
             preceded(ws, tag("}")),
         )),
-        |(_, name, _, items, _)| StructDef {
-            name,
-            items,
-        },
+        |(_, name, _, items, _)| StructDef { name, items },
     )(i)
 }
 
