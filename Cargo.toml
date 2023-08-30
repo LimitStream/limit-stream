@@ -9,9 +9,15 @@ edition = "2021"
 # name = "parse_test"
 # path = "test/parse_test.rs"
 
+[[bin]]
+name = "limit_stream"
+path = "src/main.rs"
+
+
 [[example]]
 name = "parse"
 path = "examples/parse.rs"
 
 [dependencies]
+clap = { version = "4.4.1", features = ["derive", "unicode"] }
 nom = "7.1.3"
