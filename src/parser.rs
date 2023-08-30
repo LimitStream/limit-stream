@@ -10,7 +10,7 @@ use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, Session, SessionDef, SessionType,
-    SimpleType, StructDef, Type, TypeOrName, TypeUnion, SessionOrName,
+    SimpleType, StructDef, Type, TypeOrName, TypeUnion, SessionOrName, MacrodDef,
 };
 
 
@@ -28,6 +28,10 @@ macro_rules! macro_gen {
     };
 }
 // */
+
+pub fn macrod_def(i: &str) -> IResult<&str, MacrodDef> {
+    preceded(ws, map(_macro(preceded(ws, def)), MacrodDef))(i)
+}
 
 pub fn def(i: &str) -> IResult<&str, Def> {
     alt((

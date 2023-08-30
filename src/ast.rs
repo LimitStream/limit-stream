@@ -1,3 +1,6 @@
+
+pub struct MacrodDef<'a, 'b> (pub Macro<'a, Def<'b>>);
+
 /// ```pest
 /// defs = {
 ///   session_def |
