@@ -1,13 +1,13 @@
-use std::collections::HashMap;
+
 
 use nom::branch::alt;
-use nom::bytes::complete::{escaped, escaped_transform, is_a, is_not, tag};
-use nom::character::complete::{alpha1, anychar, char, digit1, hex_digit1, oct_digit1, one_of};
-use nom::combinator::{cut, fail, map, map_res, not, opt, recognize, value};
+use nom::bytes::complete::{escaped_transform, is_a, tag};
+use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
+use nom::combinator::{cut, map, map_res, not, opt, recognize, value};
 use nom::multi::{many0, many1, separated_list0, separated_list1};
-use nom::number::complete::{double, float};
+
 use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
-use nom::{bytes::complete::take_while, error::ParseError, IResult};
+use nom::{bytes::complete::take_while, IResult};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, Macro, Session, SessionDef, SessionType,

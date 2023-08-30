@@ -1,8 +1,8 @@
 use limit_stream::ast::{
-    Annotation, Constant, Def, EnumDef, Session, SessionDef, SessionType, SimpleType, StructDef,
+    Annotation, Constant, EnumDef, Session, SessionDef, SessionType, SimpleType, StructDef,
     Type, TypeOrName,
 };
-use limit_stream::parser::{_type, def, enum_def, enum_item, session_def, struct_def, struct_item};
+use limit_stream::parser::{_type, enum_def, enum_item, session_def, struct_def, struct_item};
 
 macro_rules! gen_test {
     ($parse: expr, $testname: ident, $src: expr, $result: expr) => {
