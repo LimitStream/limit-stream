@@ -2,7 +2,7 @@ use nom::branch::alt;
 use nom::bytes::complete::{escaped_transform, is_a, tag};
 use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
 use nom::combinator::{cut, map, map_res, not, opt, recognize, value};
-use nom::multi::{many0, many1, separated_list0, separated_list1};
+use nom::multi::{many0, many1, separated_list0, separated_list1, many_m_n};
 
 use nom::sequence::{pair, preceded, separated_pair, terminated, tuple};
 use nom::{bytes::complete::take_while, IResult};
@@ -169,14 +169,15 @@ pub fn session(i: &str) -> IResult<&str, Session> {
 }
 
 pub fn type_union(i: &str) -> IResult<&str, SessionUnion> {
-    map(
-        separated_pair(
-            preceded(ws, session_or_name),
-            preceded(ws, tag("|")),
-            preceded(ws, session_or_name),
-        ),
-        |(a, b)| SessionUnion(a, b),
-    )(i)
+    map(many_m_n(2, 10, preceded(ws, preceded(tag("|"), preceded(ws, session_or_name)))), |v| SessionUnion(v))(i)
+        // map(
+        //     separated_pair(
+        //         preceded(ws, session_or_name),
+        //         preceded(ws, tag("|")),
+        //         preceded(ws, session_or_name),
+        //     ),
+        //     |(a, b)| SessionUnion(a, b),
+        // )(i)
 }
 
 pub fn name(i: &str) -> IResult<&str, &str> {

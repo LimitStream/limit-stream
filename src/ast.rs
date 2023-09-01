@@ -131,7 +131,7 @@ pub enum Session<'a> {
 ///
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct SessionUnion<'a>(pub SessionOrName<'a>, pub SessionOrName<'a>);
+pub struct SessionUnion<'a>(pub Vec<SessionOrName<'a>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContainerType<'a> {

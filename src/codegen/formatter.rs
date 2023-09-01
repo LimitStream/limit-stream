@@ -145,11 +145,14 @@ impl<'a> Codegen<Formatter> for Type<'a> {
 impl<'a> Codegen<Formatter> for SessionUnion<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         generator.indent += 1;
-        let res = format!(
-            "{} |\n{}",
-            self.0.generate(generator),
-            self.1.generate(generator)
-        );
+        let mut res = String::new();
+        for s in self.0.iter() {
+            res += &format!(
+                "\n{}| {}",
+                generator.get_tab(),
+                &s.generate(generator)[generator.indent * generator.tab_size..].replace("\n", "\n  ")
+            );
+        }
         generator.indent -= 1;
         res
     }
@@ -158,7 +161,7 @@ impl<'a> Codegen<Formatter> for SessionUnion<'a> {
 impl<'a> Codegen<Formatter> for SessionOrName<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         match self {
-            SessionOrName::Name(name) => name.to_string(),
+            SessionOrName::Name(name) => format!("{}{}", generator.get_tab(), name),
             SessionOrName::Session(session) => session.generate(generator),
         }
     }

@@ -4,7 +4,7 @@ use limit_stream::parser::*;
 
 fn main() {
     let (_, ast) = macrod_def(
-        "channel shit = recv int -> send int -> recv int -> offer sum | recv int -> end",
+        "channel sum = recv int -> offer | sum | recv Done -> send int -> end",
     )
     .unwrap();
     let src = ast.generate(&mut Formatter {
