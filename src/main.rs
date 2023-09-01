@@ -1,8 +1,7 @@
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = 
-"
+#[command(author, version, about = "
 limitc is a compiler for limit_stream IDL files.
 "    
     , long_about = Some(

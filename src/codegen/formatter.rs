@@ -144,11 +144,14 @@ impl<'a> Codegen<Formatter> for Type<'a> {
 
 impl<'a> Codegen<Formatter> for SessionUnion<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
-        format!(
-            "{} | {}",
+        generator.indent += 1;
+        let res = format!(
+            "{} |\n{}",
             self.0.generate(generator),
             self.1.generate(generator)
-        )
+        );
+        generator.indent -= 1;
+        res
     }
 }
 
@@ -167,7 +170,7 @@ impl<'a> Codegen<Formatter> for SessionType<'a> {
             .iter()
             .map(|m| format!("{}{}", generator.get_tab(), m.generate(generator)))
             .collect::<Vec<String>>()
-            .join(" -> ") // FIXME
+            .join(" ->\n") // FIXME
     }
 }
 
