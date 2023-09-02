@@ -150,7 +150,8 @@ impl<'a> Codegen<Formatter> for SessionUnion<'a> {
             res += &format!(
                 "\n{}| {}",
                 generator.get_tab(),
-                &s.generate(generator)[generator.indent * generator.tab_size..].replace("\n", "\n  ")
+                &s.generate(generator)[generator.indent * generator.tab_size..]
+                    .replace("\n", "\n  ")
             );
         }
         generator.indent -= 1;
