@@ -150,11 +150,11 @@ pub fn session(i: &str) -> IResult<&str, Session> {
     alt((
         value(Session::Endpoint, tag("end")),
         map(
-            preceded(ws, preceded(tag("offer"), preceded(ws, type_union))),
+            preceded(ws, preceded(tag("offer"), preceded(ws, session_union))),
             Session::Offer,
         ),
         map(
-            preceded(ws, preceded(tag("choose"), preceded(ws, type_union))),
+            preceded(ws, preceded(tag("choose"), preceded(ws, session_union))),
             Session::Choose,
         ),
         map(
@@ -168,7 +168,7 @@ pub fn session(i: &str) -> IResult<&str, Session> {
     ))(i)
 }
 
-pub fn type_union(i: &str) -> IResult<&str, SessionUnion> {
+pub fn session_union(i: &str) -> IResult<&str, SessionUnion> {
     map(
         many_m_n(
             2,

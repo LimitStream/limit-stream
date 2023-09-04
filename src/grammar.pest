@@ -15,7 +15,7 @@ session_def = {
 
 session_type =
   { "end"
-  | ("offer" ~ union_type)
+  | ("offer" ~ session_type)
   | (session_kind ~ type_or_name) ~ construct_session_type*
   }
 
@@ -24,8 +24,8 @@ session_kind =
   | "send"
   }
 
-union_type = {
-  type_or_name ~ "|" ~ type_or_name
+session_type = {
+  ("|" ~ type_or_name)*
 }
 
 type_or_name = { _type | name }
