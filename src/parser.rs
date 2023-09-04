@@ -1,7 +1,11 @@
+use std::str::FromStr;
+
+use nom::Err;
 use nom::branch::alt;
 use nom::bytes::complete::{escaped_transform, is_a, tag};
 use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
 use nom::combinator::{cut, map, map_res, not, opt, recognize, value};
+use nom::error::Error;
 use nom::multi::{many0, many1, many_m_n, separated_list0, separated_list1};
 
 use nom::sequence::{pair, preceded, terminated, tuple};
@@ -26,6 +30,11 @@ macro_rules! macro_gen {
     };
 }
 // */
+
+pub fn parse(i: &str) -> Result<Vec<MacrodDef>, Err<Error<&str>>> {
+    let (_, r) = many0(macrod_def)(i)?;
+    Ok(r)
+}
 
 pub fn macrod_def(i: &str) -> IResult<&str, MacrodDef> {
     preceded(ws, map(_macro(preceded(ws, def)), MacrodDef))(i)

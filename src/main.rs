@@ -1,9 +1,12 @@
+use std::{fs::File, io::{Read, Write}};
+
 use clap::Parser;
+use limit_stream::{codegen::{formatter::Formatter, Codegen}, parser::parse};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "
 limitc is a compiler for limit_stream IDL files.
-"    
+"
     , long_about = Some(
 "
 limitc is a compiler for limit_stream IDL files.
@@ -43,5 +46,20 @@ enum Limitsc {
 
 fn main() {
     let args = Limitsc::parse();
-    println!("{:#?}", args);
+    match args {
+        Limitsc::Format { indent, path } => {
+            let mut fmt = Formatter { tab_size: indent, indent: 0 };
+            let mut src = String::new();
+            {
+                let mut f = File::options().read(true).open(path.clone()).expect("file is not open");
+                f.read_to_string(&mut src).expect("file read invalid");
+            }
+            let asts = parse(&src).expect("syntax error");
+            let formated_src = asts.into_iter().map(|ast| ast.generate(&mut fmt)).collect::<Vec<_>>().join("\n");
+            let mut f = File::options().write(true).open(path).expect("file is not open");
+            let _ = f.write(formated_src.as_bytes()).expect("write error");
+        },
+        Limitsc::CodeGen { lang, gen_mode, idl_path, out_path, file } => todo!(),
+        Limitsc::TypeCheck { path, file } => todo!(),
+    }
 }
