@@ -47,7 +47,7 @@ impl<'a> Codegen<Formatter> for SessionDef<'a> {
     fn generate(&self, generator: &mut Formatter) -> String {
         let session = self.session.generate(&mut generator.append_indent());
         format!(
-            "{}session {} = \n{}{}",
+            "{}channel {} = \n{}{}",
             generator.get_tab(),
             self.name,
             generator.get_tab(),

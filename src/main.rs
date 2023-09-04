@@ -51,9 +51,10 @@ fn main() {
             let mut fmt = Formatter { tab_size: indent, indent: 0 };
             let mut src = String::new();
             {
-                let mut f = File::options().read(true).open(path.clone()).expect("file is not open");
+                let mut f = File::open(path.clone()).expect("file is not open");
                 f.read_to_string(&mut src).expect("file read invalid");
             }
+            println!("file: {}", src);
             let asts = parse(&src).expect("syntax error");
             let formated_src = asts.into_iter().map(|ast| ast.generate(&mut fmt)).collect::<Vec<_>>().join("\n");
             let mut f = File::options().write(true).open(path).expect("file is not open");
