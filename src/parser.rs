@@ -1,11 +1,8 @@
-use std::str::FromStr;
-
-use nom::Err;
 use nom::branch::alt;
 use nom::bytes::complete::{escaped_transform, is_a, tag};
 use nom::character::complete::{anychar, char, digit1, hex_digit1, oct_digit1};
 use nom::combinator::{cut, map, map_res, not, opt, recognize, value};
-use nom::error::{Error, ErrorKind};
+
 use nom::multi::{many0, many1, many_m_n, separated_list0, separated_list1};
 
 use nom::sequence::{pair, preceded, terminated, tuple};
@@ -32,7 +29,7 @@ macro_rules! macro_gen {
 // */
 
 pub fn parse(i: &str) -> Result<Vec<MacrodDef>, String> {
-    let (str, r) =  many1(macrod_def)(i.trim()).map_err(|e| format!("{}", e))?;
+    let (str, r) = many1(macrod_def)(i.trim()).map_err(|e| format!("{}", e))?;
     if !str.is_empty() {
         return Err("parse failed to end".to_string());
     }
@@ -72,9 +69,12 @@ pub fn struct_def(i: &str) -> IResult<&str, StructDef> {
             preceded(
                 ws,
                 terminated(
-                separated_list0(
-                    preceded(ws, char(',')),
-                    preceded(ws, _macro(preceded(ws, struct_item)))), opt(char(','))),
+                    separated_list0(
+                        preceded(ws, char(',')),
+                        preceded(ws, _macro(preceded(ws, struct_item))),
+                    ),
+                    opt(char(',')),
+                ),
             ),
             preceded(ws, tag("}")),
         )),
@@ -91,9 +91,12 @@ pub fn enum_def(i: &str) -> IResult<&str, EnumDef> {
             preceded(
                 ws,
                 terminated(
-                separated_list0(
-                    preceded(ws, char(',')),
-                    preceded(ws, _macro(preceded(ws, enum_item)))), opt(char(',')))
+                    separated_list0(
+                        preceded(ws, char(',')),
+                        preceded(ws, _macro(preceded(ws, enum_item))),
+                    ),
+                    opt(char(',')),
+                ),
             ),
             preceded(ws, tag("}")),
         )),
@@ -187,7 +190,7 @@ pub fn session_union(i: &str) -> IResult<&str, SessionUnion> {
             10,
             preceded(ws, preceded(tag("|"), preceded(ws, session_or_name))),
         ),
-        |v| SessionUnion(v),
+        SessionUnion,
     )(i)
     // map(
     //     separated_pair(
@@ -348,7 +351,7 @@ pub fn _macro<
         Ok((
             i,
             Macro {
-                appends: appends,
+                appends,
                 body: Box::new(r),
             },
         ))

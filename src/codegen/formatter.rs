@@ -98,7 +98,7 @@ impl<'a> Codegen<Formatter> for StructItem<'a> {
             self.0,
             self.1.generate(generator),
             if let Some(s) = self.2 {
-                format!(" = {}", s.to_string())
+                format!(" = {}", s)
             } else {
                 "".to_string()
             }
@@ -114,7 +114,7 @@ impl<'a> Codegen<Formatter> for EnumItem<'a> {
             self.0,
             self.1.generate(generator),
             if let Some(s) = self.2 {
-                format!(" = {}", s.to_string())
+                format!(" = {}", s)
             } else {
                 "".to_string()
             }
@@ -151,7 +151,7 @@ impl<'a> Codegen<Formatter> for SessionUnion<'a> {
                 "\n{}| {}",
                 generator.get_tab(),
                 &s.generate(generator)[generator.indent * generator.tab_size..]
-                    .replace("\n", "\n  ")
+                    .replace('\n', "\n  ")
             );
         }
         generator.indent -= 1;

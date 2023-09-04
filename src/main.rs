@@ -1,7 +1,13 @@
-use std::{fs::File, io::{Read, Write}};
+use std::{
+    fs::File,
+    io::{Read, Write},
+};
 
 use clap::Parser;
-use limit_stream::{codegen::{formatter::Formatter, Codegen}, parser::parse};
+use limit_stream::{
+    codegen::{formatter::Formatter, Codegen},
+    parser::parse,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "
@@ -48,7 +54,10 @@ fn main() {
     let args = Limitsc::parse();
     match args {
         Limitsc::Format { indent, path } => {
-            let mut fmt = Formatter { tab_size: indent, indent: 0 };
+            let mut fmt = Formatter {
+                tab_size: indent,
+                indent: 0,
+            };
             let mut src = String::new();
             {
                 let mut f = File::open(path.clone()).expect("file is not open");
@@ -56,11 +65,24 @@ fn main() {
             }
             println!("file: {}", src);
             let asts = parse(&src).expect("syntax error");
-            let formated_src = asts.into_iter().map(|ast| ast.generate(&mut fmt)).collect::<Vec<_>>().join("\n");
-            let mut f = File::options().write(true).open(path).expect("file is not open");
+            let formated_src = asts
+                .into_iter()
+                .map(|ast| ast.generate(&mut fmt))
+                .collect::<Vec<_>>()
+                .join("\n");
+            let mut f = File::options()
+                .write(true)
+                .open(path)
+                .expect("file is not open");
             let _ = f.write(formated_src.as_bytes()).expect("write error");
-        },
-        Limitsc::CodeGen { lang, gen_mode, idl_path, out_path, file } => todo!(),
+        }
+        Limitsc::CodeGen {
+            lang,
+            gen_mode,
+            idl_path,
+            out_path,
+            file,
+        } => todo!(),
         Limitsc::TypeCheck { path, file } => todo!(),
     }
 }
