@@ -1,9 +1,9 @@
 use std::{
-    fs::File,
-    io::{Read, Write},
+    fs::{File, metadata, read_dir},
+    io::{Read, Write}, ffi::OsString,
 };
 
-use clap::Parser;
+use clap::{Parser, builder::OsStr};
 use limit_stream::{
     codegen::{formatter::Formatter, Codegen},
     parser::parse,
@@ -50,31 +50,51 @@ enum Limitsc {
     },
 }
 
-fn main() {
+fn format_dir() {
+
+}
+
+fn format_file(mut fmt: Formatter, path: String) -> std::io::Result<()> {
+    let mut src = String::new();
+    {
+        let mut f = File::open(path.clone())?;
+        f.read_to_string(&mut src)?;
+    }
+    println!("file: {}", src);
+    let asts = parse(&src).expect("syntax error");
+    let formated_src = asts
+        .into_iter()
+        .map(|ast| ast.generate(&mut fmt))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let mut f = File::options()
+        .write(true)
+        .open(path)?;
+    let _ = f.write(formated_src.as_bytes())?;
+    Ok(())
+}
+
+fn main() -> std::io::Result<()> {
     let args = Limitsc::parse();
     match args {
         Limitsc::Format { indent, path } => {
-            let mut fmt = Formatter {
+            let fmt = Formatter {
                 tab_size: indent,
                 indent: 0,
             };
-            let mut src = String::new();
-            {
-                let mut f = File::open(path.clone()).expect("file is not open");
-                f.read_to_string(&mut src).expect("file read invalid");
+            let pathinfo = metadata(path.clone())?;
+            if  pathinfo.file_type().is_dir() {
+                let dir = read_dir(path)?;
+                for i in dir {
+                    if let Ok(i) = i {
+                        if i.file_type()?.is_file() && i.path().extension().expect("invalid extension name") == Into::<OsString>::into("lstr".to_string()) {
+                            format_file(fmt.clone(), i.path().to_str().unwrap().to_string())?;
+                        }
+                    }
+                }
+            } else {
+                format_file(fmt, path)?;
             }
-            println!("file: {}", src);
-            let asts = parse(&src).expect("syntax error");
-            let formated_src = asts
-                .into_iter()
-                .map(|ast| ast.generate(&mut fmt))
-                .collect::<Vec<_>>()
-                .join("\n");
-            let mut f = File::options()
-                .write(true)
-                .open(path)
-                .expect("file is not open");
-            let _ = f.write(formated_src.as_bytes()).expect("write error");
         }
         Limitsc::CodeGen {
             lang,
@@ -85,4 +105,5 @@ fn main() {
         } => todo!(),
         Limitsc::TypeCheck { path, file } => todo!(),
     }
+    Ok(())
 }
