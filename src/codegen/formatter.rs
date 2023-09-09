@@ -138,6 +138,8 @@ impl<'a> Codegen<Formatter> for Type<'a> {
             Type::ContainerType(_) => todo!(),
             Type::SimpleType(st) => st.generate(generator),
             Type::Constant(c) => c.generate(generator),
+            Type::Struct(_s) => unimplemented!(),
+            Type::Enum(_e) => unimplemented!(),
         }
     }
 }

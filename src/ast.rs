@@ -1,5 +1,13 @@
 pub struct MacrodDef<'a>(pub Macro<'a, Def<'a>>);
 
+pub trait GetName {
+    fn get_name(&self) -> &str;
+}
+
+pub trait GetFields {
+    fn get_fields(&self) -> Vec<TypeOrName>;
+}
+
 /// ```pest
 /// defs = {
 ///   session_def |
@@ -14,6 +22,36 @@ pub enum Def<'a> {
     EnumDef(EnumDef<'a>),
 }
 
+impl<'a> Into<Type<'a>> for Def<'a> {
+    fn into(self) -> Type<'a> {
+        match self {
+            Def::SessionDef(s) => Type::SessionType(*s.session.body),
+            Def::StructDef(s) => Type::Struct(s),
+            Def::EnumDef(e) => Type::Enum(e),
+        }
+    }
+}
+
+impl<'a> GetName for Def<'a> {
+    fn get_name(&self) -> &str {
+        match self {
+            Def::SessionDef(d) => d.get_name(),
+            Def::StructDef(d) => d.get_name(),
+            Def::EnumDef(d) => d.get_name(),
+        }
+    }
+}
+
+impl<'a> GetFields for Def<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        match self {
+            Def::SessionDef(d) => d.get_fields(),
+            Def::StructDef(d) => d.get_fields(),
+            Def::EnumDef(d) => d.get_fields(),
+        }
+    }
+}
+
 /// ```pest
 /// session_def = {
 ///   anotation ~
@@ -24,6 +62,18 @@ pub enum Def<'a> {
 pub struct SessionDef<'a> {
     pub name: &'a str,
     pub session: Macro<'a, SessionType<'a>>,
+}
+
+impl<'a> GetName for SessionDef<'a> {
+    fn get_name(&self) -> &str {
+        self.name
+    }
+}
+
+impl<'a> GetFields for SessionDef<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        self.session.get_fields()
+    }
 }
 
 /// ```pest
@@ -46,6 +96,12 @@ pub struct SessionDef<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct SessionType<'a>(pub Vec<Macro<'a, Session<'a>>>);
 
+impl<'a> GetFields for SessionType<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        self.0.iter().map(GetFields::get_fields).flatten().collect()
+    }
+}
+
 /// ```pest
 /// struct_def = {
 ///   anotation ~
@@ -60,11 +116,33 @@ pub struct StructDef<'a> {
     pub items: Vec<Macro<'a, StructItem<'a>>>,
 }
 
+impl<'a> GetName for StructDef<'a> {
+    fn get_name(&self) -> &str {
+        self.name
+    }
+}
+
+impl<'a> GetFields for StructDef<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        self.items
+            .iter()
+            .map(GetFields::get_fields)
+            .flatten()
+            .collect()
+    }
+}
+
 /// struct_item = {
 ///   anotation ~ name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
 /// }
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);
+
+impl<'a> GetFields for StructItem<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        vec![self.1.clone()]
+    }
+}
 
 /// enum_def = {
 ///   anotation ~
@@ -78,11 +156,33 @@ pub struct EnumDef<'a> {
     pub items: Vec<Macro<'a, EnumItem<'a>>>,
 }
 
+impl<'a> GetName for EnumDef<'a> {
+    fn get_name(&self) -> &str {
+        self.name
+    }
+}
+
+impl<'a> GetFields for EnumDef<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        self.items
+            .iter()
+            .map(GetFields::get_fields)
+            .flatten()
+            .collect()
+    }
+}
+
 /// enum_item = {
 ///   anotation ~ name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
 /// }
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);
+
+impl<'a> GetFields for EnumItem<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        vec![self.1.clone()]
+    }
+}
 
 /// ```pest
 /// type_or_name = { _type | name }
@@ -97,8 +197,8 @@ pub enum TypeOrName<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type<'a> {
     SessionType(SessionType<'a>),
-    // Struct(StructDef<'a>),
-    // Enum(EnumDef<'a>),
+    Struct(StructDef<'a>),
+    Enum(EnumDef<'a>),
     ContainerType(ContainerType<'a>), // todo
     SimpleType(SimpleType),
     Constant(Constant),
@@ -114,6 +214,18 @@ pub enum SessionOrName<'a> {
     Session(Box<SessionType<'a>>),
 }
 
+impl<'a> GetFields for SessionOrName<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        match self {
+            SessionOrName::Name(_) => {
+                // FIXME
+                vec![]
+            }
+            SessionOrName::Session(s) => s.get_fields(),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Session<'a> {
     Recv(TypeOrName<'a>),
@@ -124,6 +236,16 @@ pub enum Session<'a> {
     Endpoint,
 }
 
+impl<'a> GetFields for Session<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        match self {
+            Session::Recv(r) | Session::Send(r) => vec![r.clone()],
+            Session::Offer(u) | Session::Choose(u) => u.get_fields(),
+            Session::Endpoint => vec![],
+        }
+    }
+}
+
 /// ```pest
 /// session_union = {
 ///   session_or_name ~ "|" ~ session_or_name
@@ -132,6 +254,12 @@ pub enum Session<'a> {
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct SessionUnion<'a>(pub Vec<SessionOrName<'a>>);
+
+impl<'a> GetFields for SessionUnion<'a> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        todo!()
+    }
+}
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContainerType<'a> {
@@ -162,6 +290,12 @@ pub enum Constant {
 pub struct Macro<'a, T> {
     pub appends: Vec<Append<'a>>,
     pub body: Box<T>,
+}
+
+impl<'a, T: GetFields> GetFields for Macro<'a, T> {
+    fn get_fields(&self) -> Vec<TypeOrName> {
+        self.body.get_fields()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
