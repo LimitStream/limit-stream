@@ -16,7 +16,8 @@ pub enum Def<'a> {
 
 /// ```pest
 /// session_def = {
-///  "channel" ~ name ~ "=" ~ session_type
+///   anotation ~
+///   "channel" ~ name ~ "=" ~ session_type
 /// }
 /// ```
 #[derive(Debug, Clone, PartialEq)]
@@ -50,10 +51,8 @@ pub struct SessionType<'a>(pub Vec<Macro<'a, Session<'a>>>);
 ///   anotation ~
 ///   "struct" ~ name ~ "{" ~
 ///     (struct_item ~ ("," ~ struct_item) ~ ","?)?
-///    ~ "}"
+///   ~ "}"
 /// }
-///
-
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructDef<'a> {
@@ -62,12 +61,13 @@ pub struct StructDef<'a> {
 }
 
 /// struct_item = {
-///   name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
+///   anotation ~ name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
 /// }
 #[derive(Debug, Clone, PartialEq)]
 pub struct StructItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);
 
 /// enum_def = {
+///   anotation ~
 ///   "enum" ~ name ~ "{" ~
 ///   (enum_item ~ ("," ~ enum_item) ~ ","?)?
 ///    ~ "}"
@@ -79,7 +79,7 @@ pub struct EnumDef<'a> {
 }
 
 /// enum_item = {
-///   name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
+///   anotation ~ name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
 /// }
 #[derive(Debug, Clone, PartialEq)]
 pub struct EnumItem<'a>(pub &'a str, pub TypeOrName<'a>, pub Option<u64>);

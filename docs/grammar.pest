@@ -10,12 +10,13 @@ defs = {
 }
 
 session_def = {
-  "session" ~ name ~ "=" ~ session_type
+  anotation ~ "session" ~ name ~ "=" ~ session_type
 }
 
 session_type =
   { "end"
-  | ("offer" ~ session_type)
+  | ("offer" ~ session_union)
+  | ("choose" ~ session_union)
   | (session_kind ~ type_or_name) ~ construct_session_type*
   }
 
@@ -24,7 +25,7 @@ session_kind =
   | "send"
   }
 
-session_type = {
+session_union = {
   ("|" ~ type_or_name)*
 }
 
@@ -46,17 +47,18 @@ struct_def = {
 }
 
 struct_item = {
-  name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
+  anotation ~ name ~ ":" ~ type_or_name ~ ("=" ~ int_lit)?
 }
 
 enum_def = {
+  anotation ~
   "enum" ~ name ~ "{" ~
   (enum_item ~ ("," ~ enum_item) ~ ","?)?
    ~ "}"
 }
 
 enum_item = {
-  name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
+  anotation ~ name ~ "(" ~ type_or_name ~ ")" ~ ("=" ~ int_lit)?
 }
 
 name = @{ (!(WHITE_SPACE
