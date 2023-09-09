@@ -4,7 +4,7 @@ use std::{
     io::{Read, Write},
 };
 
-use clap::{builder::OsStr, Parser};
+use clap::Parser;
 use limit_stream::{
     codegen::{formatter::Formatter, Codegen},
     parser::parse,
@@ -51,7 +51,7 @@ enum Limitsc {
     },
 }
 
-fn format_dir() {}
+// fn format_dir() {}
 
 fn format_file(mut fmt: Formatter, path: String) -> std::io::Result<()> {
     let mut src = String::new();
@@ -82,14 +82,12 @@ fn main() -> std::io::Result<()> {
             let pathinfo = metadata(path.clone())?;
             if pathinfo.file_type().is_dir() {
                 let dir = read_dir(path)?;
-                for i in dir {
-                    if let Ok(i) = i {
-                        if i.file_type()?.is_file()
-                            && i.path().extension().expect("invalid extension name")
-                                == Into::<OsString>::into("lstr".to_string())
-                        {
-                            format_file(fmt.clone(), i.path().to_str().unwrap().to_string())?;
-                        }
+                for i in dir.flatten() {
+                    if i.file_type()?.is_file()
+                        && i.path().extension().expect("invalid extension name")
+                            == Into::<OsString>::into("lstr".to_string())
+                    {
+                        format_file(fmt.clone(), i.path().to_str().unwrap().to_string())?;
                     }
                 }
             } else {

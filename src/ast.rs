@@ -22,9 +22,9 @@ pub enum Def<'a> {
     EnumDef(EnumDef<'a>),
 }
 
-impl<'a> Into<Type<'a>> for Def<'a> {
-    fn into(self) -> Type<'a> {
-        match self {
+impl<'a> From<Def<'a>> for Type<'a> {
+    fn from(value: Def<'a>) -> Self {
+        match value {
             Def::SessionDef(s) => Type::SessionType(*s.session.body),
             Def::StructDef(s) => Type::Struct(s),
             Def::EnumDef(e) => Type::Enum(e),
@@ -98,7 +98,7 @@ pub struct SessionType<'a>(pub Vec<Macro<'a, Session<'a>>>);
 
 impl<'a> GetFields for SessionType<'a> {
     fn get_fields(&self) -> Vec<TypeOrName> {
-        self.0.iter().map(GetFields::get_fields).flatten().collect()
+        self.0.iter().flat_map(GetFields::get_fields).collect()
     }
 }
 
@@ -124,11 +124,7 @@ impl<'a> GetName for StructDef<'a> {
 
 impl<'a> GetFields for StructDef<'a> {
     fn get_fields(&self) -> Vec<TypeOrName> {
-        self.items
-            .iter()
-            .map(GetFields::get_fields)
-            .flatten()
-            .collect()
+        self.items.iter().flat_map(GetFields::get_fields).collect()
     }
 }
 
@@ -164,11 +160,7 @@ impl<'a> GetName for EnumDef<'a> {
 
 impl<'a> GetFields for EnumDef<'a> {
     fn get_fields(&self) -> Vec<TypeOrName> {
-        self.items
-            .iter()
-            .map(GetFields::get_fields)
-            .flatten()
-            .collect()
+        self.items.iter().flat_map(GetFields::get_fields).collect()
     }
 }
 
