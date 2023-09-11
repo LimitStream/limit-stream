@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use petgraph::Graph;
+use petgraph::{Graph, algo::is_cyclic_directed};
 
 use crate::ast::{Def, GetFields, GetName, Type, TypeOrName};
 
@@ -17,7 +17,12 @@ pub enum Error<'a> {
     NameIsNotFound(&'a str),
 }
 
-pub fn ir2graph<'a>(irs: &'a [Def]) -> Result<Graph<&'a Def<'a>, &'a Def<'a>>, Error<'a>> {
+pub fn ring_checker<'a>(irs: &'a [Def]) -> Result<bool, Error<'a>> {
+    let g = ir2graph(irs)?;
+    Ok(is_cyclic_directed(&g))
+}
+
+pub fn ir2graph<'a>(irs: &'a [Def]) -> Result<Graph<Type<'a>, ()>, Error<'a>> {
     let table: HashMap<_, _> = irs
         .iter()
         .map(|def| (def.get_name(), def.clone().into()))
@@ -38,14 +43,13 @@ pub fn ir2graph<'a>(irs: &'a [Def]) -> Result<Graph<&'a Def<'a>, &'a Def<'a>>, E
         .collect::<Result<Vec<Vec<_>>, Error>>();
     let r = r?.into_iter().flatten();
 
-    let mut graph = Graph::new();
+    let mut graph: Graph<Type, ()> = Graph::new();
     for (node0, node1) in r {
         let node0 = graph.add_node(node0);
         let node1 = graph.add_node(node1);
-        graph.add_edge(node0, node1, 1);
+        graph.add_edge(node0, node1, ());
     }
-
-    todo!()
+    Ok(graph)
 }
 
 fn unify_type_or_name<'a>(
