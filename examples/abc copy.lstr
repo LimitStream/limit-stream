@@ -1,3 +1,4 @@
+#[rpc]
 struct User {
     name: string = 0,
     age: uint = 1,

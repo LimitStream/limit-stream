@@ -371,10 +371,22 @@ pub fn annotation(i: &str) -> IResult<&str, Annotation> {
         tuple((
             preceded(ws, tag("#")),
             preceded(ws, tag("[")),
+            preceded(ws, annotation_body),
             preceded(ws, tag("]")),
         )),
-        |(_, _, _)| Annotation {},
+        |(_, _, a, _)| a,
     )(i)
+}
+
+pub fn annotation_body(i: &str) -> IResult<&str, Annotation> {
+    alt((
+        map(tuple((
+            preceded(ws, name),
+            preceded(ws, tag("=")),
+            preceded(ws, constant),
+        )), |(name, _, c)| Annotation(name, c)),
+        map(preceded(ws, name), |name| Annotation(name, Constant::Bool(true)))
+    ))(i)
 }
 
 pub fn docu_comment(i: &str) -> IResult<&str, &str> {

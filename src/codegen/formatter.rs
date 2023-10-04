@@ -240,9 +240,8 @@ impl<'a> Codegen<Formatter> for Append<'a> {
     }
 }
 
-impl Codegen<Formatter> for Annotation {
-    fn generate(&self, _generator: &mut Formatter) -> String {
-        //todo:
-        "".to_string()
+impl<'a> Codegen<Formatter> for Annotation<'a> {
+    fn generate(&self, generator: &mut Formatter) -> String {
+        format!("#[{}={}]", self.0, self.1.generate(generator))
     }
 }

@@ -294,8 +294,8 @@ impl<'a, T: GetFields> GetFields for Macro<'a, T> {
 pub enum Append<'a> {
     LineComment(&'a str),
     DocsComment(&'a str),
-    Annotation(Annotation),
+    Annotation(Annotation<'a>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Annotation {}
+pub struct Annotation<'a>(pub &'a str, pub Constant);
