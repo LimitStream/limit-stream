@@ -380,12 +380,17 @@ pub fn annotation(i: &str) -> IResult<&str, Annotation> {
 
 pub fn annotation_body(i: &str) -> IResult<&str, Annotation> {
     alt((
-        map(tuple((
-            preceded(ws, name),
-            preceded(ws, tag("=")),
-            preceded(ws, constant),
-        )), |(name, _, c)| Annotation(name, c)),
-        map(preceded(ws, name), |name| Annotation(name, Constant::Bool(true)))
+        map(
+            tuple((
+                preceded(ws, name),
+                preceded(ws, tag("=")),
+                preceded(ws, constant),
+            )),
+            |(name, _, c)| Annotation(name, c),
+        ),
+        map(preceded(ws, name), |name| {
+            Annotation(name, Constant::Bool(true))
+        }),
     ))(i)
 }
 

@@ -215,7 +215,6 @@ impl Codegen<Formatter> for Constant {
             Constant::Uint(u) => u.to_string(),
             Constant::Bool(b) => b.to_string(),
         }
-        .to_string()
     }
 }
 

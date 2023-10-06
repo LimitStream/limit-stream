@@ -186,6 +186,22 @@ pub enum TypeOrName<'a> {
     Type(Box<Type<'a>>),
 }
 
+impl<'a> GetName for TypeOrName<'a> {
+    fn get_name(&self) -> &str {
+        match self {
+            TypeOrName::Name(s) => s,
+            TypeOrName::Type(t) => match t.as_ref() {
+                Type::SessionType(_) => unreachable!(),
+                Type::Struct(s) => s.get_name(),
+                Type::Enum(e) => e.get_name(),
+                Type::ContainerType(_) => todo!(),
+                Type::SimpleType(t) => t.get_name(),
+                Type::Constant(_) => unreachable!(),
+            },
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type<'a> {
     SessionType(SessionType<'a>),
@@ -267,6 +283,19 @@ pub enum SimpleType {
     Float,
     Double,
     String,
+}
+
+impl GetName for SimpleType {
+    fn get_name(&self) -> &str {
+        match self {
+            SimpleType::Bool => "Bool",
+            SimpleType::Int => "Int",
+            SimpleType::Uint => "Uint",
+            SimpleType::Float => "Float",
+            SimpleType::Double => "Double",
+            SimpleType::String => "String",
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]

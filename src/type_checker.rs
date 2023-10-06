@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use petgraph::{Graph, algo::is_cyclic_directed};
+use petgraph::{algo::is_cyclic_directed, Graph};
 
 use crate::ast::{Def, GetFields, GetName, Type, TypeOrName};
 
