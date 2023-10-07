@@ -1,4 +1,7 @@
-use std::{borrow::BorrowMut, cell::Cell, ops::AddAssign, rc::Rc};
+use std::{
+    cell::{Cell, RefCell},
+    rc::Rc,
+};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, EnumItem, GetName, Macro, MacrodDef, Session,
@@ -13,6 +16,7 @@ pub struct Rust {
     pub tab_size: usize,
     pub indent: usize,
     pub enum_id: Rc<Cell<usize>>,
+    pub codegen_regester: Rc<RefCell<Vec<String>>>,
 }
 
 impl Rust {
@@ -33,6 +37,10 @@ impl Rust {
         format!("E{}", id)
     }
 
+    fn add_to_register(&self, source: String) {
+        self.codegen_regester.as_ref().borrow_mut().push(source);
+    }
+
     pub fn anonymous_union_register(&self, union_body: &[String]) -> String {
         let items = union_body
             .iter()
@@ -47,7 +55,8 @@ impl Rust {
             })
             .collect::<String>();
         let name = self.new_union_id();
-        format!("pub enum {}{{\n{}}}\n", name, items,)
+        self.add_to_register(format!("pub enum {}{{\n{}}}\n", name, items));
+        name
     }
 }
 

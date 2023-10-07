@@ -1,12 +1,15 @@
 use std::{
+    cell::{Cell, RefCell},
     ffi::OsString,
     fs::{metadata, read_dir, File},
     io::{Read, Write},
+    path::Path,
+    rc::Rc,
 };
 
 use clap::Parser;
 use limit_stream::{
-    codegen::{formatter::Formatter, Codegen},
+    codegen::{formatter::Formatter, rust::Rust, Codegen},
     parser::parse,
 };
 
@@ -51,15 +54,33 @@ enum Limitsc {
     },
 }
 
+pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std::io::Result<()> {
+    let mut src = String::new();
+    {
+        let mut f = File::open(idl_path)?;
+        f.read_to_string(&mut src)?;
+    }
+    // println!("file: {}", src);
+    let asts = parse(&src).expect("syntax error");
+    let code = asts
+        .into_iter()
+        .map(|ast| ast.generate(&mut rs))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let mut f = File::options().write(true).open(out_path)?;
+    let _ = f.write(code.as_bytes())?;
+    Ok(())
+}
+
 // fn format_dir() {}
 
-fn format_file(mut fmt: Formatter, path: String) -> std::io::Result<()> {
+fn format_file(mut fmt: Formatter, path: &Path) -> std::io::Result<()> {
     let mut src = String::new();
     {
         let mut f = File::open(path.clone())?;
         f.read_to_string(&mut src)?;
     }
-    println!("file: {}", src);
+    // println!("file: {}", src);
     let asts = parse(&src).expect("syntax error");
     let formated_src = asts
         .into_iter()
@@ -87,11 +108,11 @@ fn main() -> std::io::Result<()> {
                         && i.path().extension().expect("invalid extension name")
                             == Into::<OsString>::into("lstr".to_string())
                     {
-                        format_file(fmt.clone(), i.path().to_str().unwrap().to_string())?;
+                        format_file(fmt.clone(), i.path().as_path())?;
                     }
                 }
             } else {
-                format_file(fmt, path)?;
+                format_file(fmt, Path::new(&path))?;
             }
         }
         Limitsc::CodeGen {
@@ -100,7 +121,43 @@ fn main() -> std::io::Result<()> {
             idl_path,
             out_path,
             file,
-        } => todo!(),
+        } => {
+            match lang.as_str() {
+                "rust" => {
+                    let rust = Rust {
+                        tab_size: 2,
+                        indent: 0,
+                        enum_id: Rc::new(Cell::new(0)),
+                        codegen_regester: Rc::new(RefCell::new(vec![])),
+                    };
+                    let pathinfo = metadata(idl_path.clone())?;
+                    if pathinfo.file_type().is_dir() {
+                        let dir = read_dir(idl_path)?;
+                        for i in dir.flatten() {
+                            if i.file_type()?.is_file()
+                                && i.path().extension().expect("invalid extension name")
+                                    == Into::<OsString>::into("lstr".to_string())
+                            {
+                                let out_path = Path::new(&out_path);
+                                let out_path = out_path.with_file_name(i.file_name());
+                                // format("{}/{}")
+                                rust_codegen_file(
+                                    rust.clone(),
+                                    i.path().as_path(),
+                                    out_path.as_path(),
+                                )?;
+                            }
+                        }
+                    } else {
+                        let idl_path = Path::new(&idl_path);
+                        let out_path = Path::new(&out_path);
+                        rust_codegen_file(rust.clone(), idl_path, out_path)?;
+                    }
+                }
+                _ => unimplemented!("unimplemented codegen target"),
+            }
+            todo!()
+        }
         Limitsc::TypeCheck { path, file } => todo!(),
     }
     Ok(())
