@@ -1,4 +1,4 @@
-use std::{rc::Rc, cell::Cell, borrow::BorrowMut, ops::AddAssign};
+use std::{borrow::BorrowMut, cell::Cell, ops::AddAssign, rc::Rc};
 
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, EnumItem, GetName, Macro, MacrodDef, Session,
@@ -29,7 +29,7 @@ impl Rust {
 
     fn new_union_id(&self) -> String {
         let id = self.enum_id.as_ref().get();
-        self.enum_id.as_ref().set(id+1);
+        self.enum_id.as_ref().set(id + 1);
         format!("E{}", id)
     }
 
@@ -37,14 +37,17 @@ impl Rust {
         let items = union_body
             .iter()
             // .enumerate()
-            .map(|typename| format!("{}T{}({}),\n", " ".repeat(self.tab_size), typename, typename))
+            .map(|typename| {
+                format!(
+                    "{}T{}({}),\n",
+                    " ".repeat(self.tab_size),
+                    typename,
+                    typename
+                )
+            })
             .collect::<String>();
         let name = self.new_union_id();
-        format!(
-            "pub enum {}{{\n{}}}\n",
-            name,
-            items,
-        )
+        format!("pub enum {}{{\n{}}}\n", name, items,)
     }
 }
 
