@@ -1,3 +1,5 @@
+use std::{rc::Rc, cell::Cell, borrow::BorrowMut, ops::AddAssign};
+
 use crate::ast::{
     Annotation, Append, Constant, Def, EnumDef, EnumItem, GetName, Macro, MacrodDef, Session,
     SessionDef, SessionOrName, SessionType, SessionUnion, SimpleType, StructDef, StructItem, Type,
@@ -10,6 +12,7 @@ use super::Codegen;
 pub struct Rust {
     pub tab_size: usize,
     pub indent: usize,
+    pub enum_id: Rc<Cell<usize>>,
 }
 
 impl Rust {
@@ -22,6 +25,26 @@ impl Rust {
     pub fn get_tab(&self) -> String {
         // TODO
         " ".repeat(self.tab_size).repeat(self.indent)
+    }
+
+    fn new_union_id(&self) -> String {
+        let id = self.enum_id.as_ref().get();
+        self.enum_id.as_ref().set(id+1);
+        format!("E{}", id)
+    }
+
+    pub fn anonymous_union_register(&self, union_body: &[String]) -> String {
+        let items = union_body
+            .iter()
+            // .enumerate()
+            .map(|typename| format!("{}T{}({}),\n", " ".repeat(self.tab_size), typename, typename))
+            .collect::<String>();
+        let name = self.new_union_id();
+        format!(
+            "pub enum {}{{\n{}}}\n",
+            name,
+            items,
+        )
     }
 }
 
@@ -148,8 +171,8 @@ impl<'a> Codegen<Rust> for SessionUnion<'a> {
             .iter()
             .map(|s| s.generate(generator))
             .collect::<Vec<String>>();
-        // todo: register anonymous session union and get name
-        todo!()
+        // register anonymous session union and get name
+        generator.anonymous_union_register(&enumitem)
     }
 }
 
@@ -165,7 +188,16 @@ impl<'a> Codegen<Rust> for SessionOrName<'a> {
 impl<'a> Codegen<Rust> for SessionType<'a> {
     fn generate(&self, generator: &mut Rust) -> String {
         // todo: register anonymous session and get name
-        todo!()
+        let mut r = String::new();
+        assert!(!self.0.is_empty());
+        for i in self.0.iter().rev() {
+            r = if r.is_empty() {
+                i.generate(generator)
+            } else {
+                format!("Next<{}, {}>", i.generate(generator), r)
+            };
+        }
+        r
     }
 }
 
