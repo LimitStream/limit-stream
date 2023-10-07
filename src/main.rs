@@ -68,6 +68,9 @@ pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std:
         .collect::<Vec<_>>()
         .join("\n");
     let mut f = File::options().write(true).open(out_path)?;
+    for code in rs.codegen_regester.as_ref().borrow().iter() {
+        let _ = f.write(code.as_bytes())?;
+    }
     let _ = f.write(code.as_bytes())?;
     Ok(())
 }
