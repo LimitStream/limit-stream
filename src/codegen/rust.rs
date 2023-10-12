@@ -55,7 +55,13 @@ impl Rust {
             })
             .collect::<String>();
         let name = self.new_union_id();
-        self.add_to_register(format!("pub enum {}{{\n{}}}\n", name, items));
+        self.add_to_register(format!("pub enum {} {{\n{}}}\n", name, items));
+        name
+    }
+
+    pub fn anonymous_session_register(&self, session: &str) -> String {
+        let name = self.new_union_id();
+        self.add_to_register(format!("pub type {} = {};\n", name, session));
         name
     }
 }
@@ -96,7 +102,7 @@ impl<'a> Codegen<Rust> for StructDef<'a> {
             .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
             .collect::<String>();
         format!(
-            "{}pub struct {}{{\n{}{}}}\n",
+            "{}pub struct {} {{\n{}{}}}\n",
             generator.get_tab(),
             self.name,
             items,
@@ -113,7 +119,7 @@ impl<'a> Codegen<Rust> for EnumDef<'a> {
             .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
             .collect::<String>();
         format!(
-            "{}enum {}{{\n{}{}}}\n",
+            "{}enum {} {{\n{}{}}}\n",
             generator.get_tab(),
             self.name,
             items,
@@ -192,7 +198,11 @@ impl<'a> Codegen<Rust> for SessionOrName<'a> {
     fn generate(&self, generator: &mut Rust) -> String {
         match self {
             SessionOrName::Name(n) => n.to_string(),
-            SessionOrName::Session(session) => session.generate(generator),
+            SessionOrName::Session(session) => {
+                let session = session.generate(generator);
+                // register session
+                generator.anonymous_session_register(&session)
+            },
         }
     }
 }
