@@ -33,10 +33,10 @@ enum Limitsc {
         gen_mode: String,
         #[arg(short, long, default_value_t = String::from("."), help = "IDL path directory")]
         idl_path: String,
-        #[arg(short, long, default_value_t = String::from("."), help = "output path directory")]
+        #[arg(short, long, default_value_t = String::from(""), help = "output path directory")]
         out_path: String,
-        #[arg(short, long, help = "entry file")]
-        file: String,
+        // #[arg(short, long, help = "entry file")]
+        // file: String,
     },
     #[command(about = "check IDL file session type")]
     TypeCheck {
@@ -123,7 +123,6 @@ fn main() -> std::io::Result<()> {
             gen_mode,
             idl_path,
             out_path,
-            file,
         } => {
             match lang.as_str() {
                 "rust" => {
@@ -135,13 +134,18 @@ fn main() -> std::io::Result<()> {
                     };
                     let pathinfo = metadata(idl_path.clone())?;
                     if pathinfo.file_type().is_dir() {
-                        let dir = read_dir(idl_path)?;
+                        let dir = read_dir(idl_path.clone())?;
                         for i in dir.flatten() {
                             if i.file_type()?.is_file()
                                 && i.path().extension().expect("invalid extension name")
                                     == Into::<OsString>::into("lstr".to_string())
                             {
-                                let out_path = Path::new(&out_path);
+                                let input_path = Path::new(&idl_path);
+                                let out_path = if out_path.is_empty() {
+                                    input_path
+                                } else {
+                                    Path::new(&out_path)
+                                };
                                 let out_path = out_path.with_file_name(i.file_name());
                                 // format("{}/{}")
                                 rust_codegen_file(
@@ -153,7 +157,12 @@ fn main() -> std::io::Result<()> {
                         }
                     } else {
                         let idl_path = Path::new(&idl_path);
-                        let out_path = Path::new(&out_path);
+                        let gen_out_path = idl_path.with_extension("rs");
+                        let out_path = if out_path.is_empty() {
+                            gen_out_path.as_path()
+                        } else {
+                            Path::new(&out_path)
+                        };
                         dbg!(idl_path);
                         dbg!(out_path);
                         rust_codegen_file(rust.clone(), idl_path, out_path)?;
