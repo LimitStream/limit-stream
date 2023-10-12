@@ -67,7 +67,7 @@ pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std:
         .map(|ast| ast.generate(&mut rs))
         .collect::<Vec<_>>()
         .join("\n");
-    let mut f = File::options().create(true).write(true).open(out_path)?;
+    let mut f = File::options().create(true).write(true).truncate(true).open(out_path)?;
     for code in rs.codegen_regester.as_ref().borrow().iter() {
         let _ = f.write(code.as_bytes())?;
     }
@@ -90,7 +90,7 @@ fn format_file(mut fmt: Formatter, path: &Path) -> std::io::Result<()> {
         .map(|ast| ast.generate(&mut fmt))
         .collect::<Vec<_>>()
         .join("\n");
-    let mut f = File::options().write(true).open(path)?;
+    let mut f = File::options().create(true).write(true).truncate(true).open(path)?;
     let _ = f.write(formated_src.as_bytes())?;
     Ok(())
 }
