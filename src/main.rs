@@ -67,7 +67,7 @@ pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std:
         .map(|ast| ast.generate(&mut rs))
         .collect::<Vec<_>>()
         .join("\n");
-    let mut f = File::options().write(true).open(out_path)?;
+    let mut f = File::options().create(true).write(true).open(out_path)?;
     for code in rs.codegen_regester.as_ref().borrow().iter() {
         let _ = f.write(code.as_bytes())?;
     }
@@ -154,12 +154,13 @@ fn main() -> std::io::Result<()> {
                     } else {
                         let idl_path = Path::new(&idl_path);
                         let out_path = Path::new(&out_path);
+                        dbg!(idl_path);
+                        dbg!(out_path);
                         rust_codegen_file(rust.clone(), idl_path, out_path)?;
                     }
                 }
                 _ => unimplemented!("unimplemented codegen target"),
             }
-            todo!()
         }
         Limitsc::TypeCheck { path, file } => todo!(),
     }
