@@ -202,7 +202,7 @@ impl<'a> Codegen<Rust> for SessionOrName<'a> {
                 let session = session.generate(generator);
                 // register session
                 generator.anonymous_session_register(&session)
-            },
+            }
         }
     }
 }
