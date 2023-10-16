@@ -99,10 +99,11 @@ impl<'a> Codegen<Rust> for StructDef<'a> {
         let items = self
             .items
             .iter()
-            .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
+            .map(|i| format!("pub {},\n", i.generate(&mut generator.append_indent())))
             .collect::<String>();
         format!(
-            "{}pub struct {} {{\n{}{}}}\n",
+            "{}#[rustfmt::skip]\n{}pub struct {} {{\n{}{}}}\n",
+            generator.get_tab(),
             generator.get_tab(),
             self.name,
             items,
@@ -119,7 +120,8 @@ impl<'a> Codegen<Rust> for EnumDef<'a> {
             .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
             .collect::<String>();
         format!(
-            "{}enum {} {{\n{}{}}}\n",
+            "{}#[rustfmt::skip]\n{}enum {} {{\n{}{}}}\n",
+            generator.get_tab(),
             generator.get_tab(),
             self.name,
             items,
