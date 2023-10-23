@@ -8,10 +8,7 @@ use std::{
 };
 
 use clap::Parser;
-use limit_stream::{
-    codegen::{format_idl, formatter::Formatter, idl2rust, rust::Rust, Codegen},
-    parser::parse,
-};
+use limit_stream::codegen::{format_idl, formatter::Formatter, idl2rust, rust::Rust};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "

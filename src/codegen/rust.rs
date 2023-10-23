@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::ast::{
-    Annotation, Append, Constant, Def, EnumDef, EnumItem, GetName, Macro, MacrodDef, Session,
+    Constant, Def, EnumDef, EnumItem, GetName, Macro, MacrodDef, Session,
     SessionDef, SessionOrName, SessionType, SessionUnion, SimpleType, StructDef, StructItem, Type,
     TypeOrName,
 };

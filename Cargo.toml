@@ -9,6 +9,10 @@ edition = "2021"
 # name = "parse_test"
 # path = "test/parse_test.rs"
 
+[lib]
+name = "limit_stream"
+path = "src/lib.rs"
+
 [[bin]]
 name = "limit-stream"
 path = "src/main.rs"
