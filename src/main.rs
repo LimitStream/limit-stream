@@ -9,7 +9,7 @@ use std::{
 
 use clap::Parser;
 use limit_stream::{
-    codegen::{formatter::Formatter, rust::Rust, Codegen},
+    codegen::{format_idl, formatter::Formatter, idl2rust, rust::Rust, Codegen},
     parser::parse,
 };
 
@@ -60,26 +60,15 @@ pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std:
         let mut f = File::open(idl_path)?;
         f.read_to_string(&mut src)?;
     }
-    // println!("file: {}", src);
-    let asts = parse(&src).expect("syntax error");
-    let code = asts
-        .into_iter()
-        .map(|ast| ast.generate(&mut rs))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let code = idl2rust(&src, &mut rs);
     let mut f = File::options()
         .create(true)
         .write(true)
         .truncate(true)
         .open(out_path)?;
-    for code in rs.codegen_regester.as_ref().borrow().iter() {
-        let _ = f.write(code.as_bytes())?;
-    }
     let _ = f.write(code.as_bytes())?;
     Ok(())
 }
-
-// fn format_dir() {}
 
 fn format_file(mut fmt: Formatter, path: &Path) -> std::io::Result<()> {
     let mut src = String::new();
@@ -87,13 +76,7 @@ fn format_file(mut fmt: Formatter, path: &Path) -> std::io::Result<()> {
         let mut f = File::open(path.clone())?;
         f.read_to_string(&mut src)?;
     }
-    // println!("file: {}", src);
-    let asts = parse(&src).expect("syntax error");
-    let formated_src = asts
-        .into_iter()
-        .map(|ast| ast.generate(&mut fmt))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let formated_src = format_idl(&src, &mut fmt);
     let mut f = File::options()
         .create(true)
         .write(true)
