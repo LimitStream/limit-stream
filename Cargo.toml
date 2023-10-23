@@ -1,5 +1,5 @@
 [package]
-name = "limit_stream"
+name = "limit-stream"
 version = "0.1.0"
 edition = "2021"
 
@@ -10,7 +10,7 @@ edition = "2021"
 # path = "test/parse_test.rs"
 
 [[bin]]
-name = "limit_stream"
+name = "limit-stream"
 path = "src/main.rs"
 
 
