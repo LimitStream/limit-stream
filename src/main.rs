@@ -63,6 +63,7 @@ pub fn rust_codegen_file(mut rs: Rust, idl_path: &Path, out_path: &Path) -> std:
         .write(true)
         .truncate(true)
         .open(out_path)?;
+    
     let _ = f.write(code.as_bytes())?;
     Ok(())
 }

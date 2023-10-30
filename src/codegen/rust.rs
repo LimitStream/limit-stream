@@ -55,13 +55,13 @@ impl Rust {
             })
             .collect::<String>();
         let name = self.new_union_id();
-        self.add_to_register(format!("pub enum {} {{\n{}}}\n", name, items));
+        self.add_to_register(format!("#[rustfmt::skip]\n#[allow(non_camel_case_types)]\npub enum {} {{\n{}}}\n", name, items));
         name
     }
 
     pub fn anonymous_session_register(&self, session: &str) -> String {
         let name = self.new_union_id();
-        self.add_to_register(format!("pub type {} = {};\n", name, session));
+        self.add_to_register(format!("#[rustfmt::skip]\n#[allow(non_camel_case_types)]\npub type {} = {};\n", name, session));
         name
     }
 }
@@ -86,7 +86,9 @@ impl<'a> Codegen<Rust> for SessionDef<'a> {
     fn generate(&self, generator: &mut Rust) -> String {
         let session_name = self.session.generate(generator);
         format!(
-            "{}pub type {} = {};\n",
+            "{}#[rustfmt::skip]\n{}#[allow(non_camel_case_types)]\n{}pub type {} = {};\n",
+            generator.get_tab(),
+            generator.get_tab(),
             generator.get_tab(),
             self.name,
             session_name
@@ -99,10 +101,12 @@ impl<'a> Codegen<Rust> for StructDef<'a> {
         let items = self
             .items
             .iter()
-            .map(|i| format!("pub {},\n", i.generate(&mut generator.append_indent())))
+            .map(|i| format!("{}pub {},\n", generator.append_indent().get_tab(), i.generate(generator)))
             .collect::<String>();
         format!(
-            "{}#[rustfmt::skip]\n{}pub struct {} {{\n{}{}}}\n",
+            "{}#[rustfmt::skip]\n{}#[allow(non_camel_case_types)]\n{}#[derive(RmpSer, RmpDeSer)]\n{}pub struct {} {{\n{}{}}}\n",
+            generator.get_tab(),
+            generator.get_tab(),
             generator.get_tab(),
             generator.get_tab(),
             self.name,
@@ -117,10 +121,13 @@ impl<'a> Codegen<Rust> for EnumDef<'a> {
         let items = self
             .items
             .iter()
-            .map(|i| format!("{},\n", i.generate(&mut generator.append_indent())))
+            .map(|i| format!("{}{},\n", generator.append_indent().get_tab(), i.generate(generator)))
             .collect::<String>();
         format!(
-            "{}#[rustfmt::skip]\n{}enum {} {{\n{}{}}}\n",
+            "{}#[rustfmt::skip]\n{}#[allow(non_camel_case_types)]\n{}#[derive(RmpSer, RmpDeSer)]\n{}#[repr(usize)]\n{}enum {} {{\n{}{}}}\n",
+            generator.get_tab(),
+            generator.get_tab(),
+            generator.get_tab(),
             generator.get_tab(),
             generator.get_tab(),
             self.name,
@@ -133,8 +140,7 @@ impl<'a> Codegen<Rust> for EnumDef<'a> {
 impl<'a> Codegen<Rust> for StructItem<'a> {
     fn generate(&self, generator: &mut Rust) -> String {
         format!(
-            "{}{}: {}",
-            generator.get_tab(),
+            "{}: {}",
             self.0,
             self.1.generate(generator)
         )
@@ -145,16 +151,14 @@ impl<'a> Codegen<Rust> for EnumItem<'a> {
     fn generate(&self, generator: &mut Rust) -> String {
         if let Some(tag) = self.2 {
             format!(
-                "{}{}({}) = {}",
-                generator.get_tab(),
+                "{}({}) = {}",
                 self.0,
                 self.1.generate(generator),
                 tag
             )
         } else {
             format!(
-                "{}{}({})",
-                generator.get_tab(),
+                "{}({})",
                 self.0,
                 self.1.generate(generator)
             )
